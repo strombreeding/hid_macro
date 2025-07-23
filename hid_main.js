@@ -76,17 +76,17 @@ io.on("connection", (socket) => {
     // 이건 m에서 올것임.
 
     // 컨트롤러 변경키는 막음
-    if (exceptionKey.includes(data)) return;
+    if (controllerType === null && exceptionKey.includes(data)) return;
     console.log(`수신된 키다운`, data);
 
-    // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
-    if (controllerType === "p") {
+    // 컨트롤러 프리스트인 경우 모든 키 이벤트를 p로 보냄
+    if (controllerType === "0") {
       if (clients.p == null) return;
       clients.p.emit("keyDown", data);
       return;
     }
-    // 컨트롤러 d인 경우 모든 키 이벤트를 d로 보냄
-    if (controllerType === "d") {
+    // 컨트롤러 용기사인 경우 모든 키 이벤트를 d로 보냄
+    if (controllerType === "9") {
       if (clients.d == null) return;
       clients.d.emit("keyDown", data);
       return;
@@ -97,17 +97,16 @@ io.on("connection", (socket) => {
     // 이건 m에서 올것임.
 
     // 컨트롤러 변경키는 막음
-    if (exceptionKey.includes(data)) return;
+    if (controllerType === null && exceptionKey.includes(data)) return;
     console.log(`수신된 키업`, data);
-
-    // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
-    if (controllerType === "p") {
+    // 컨트롤러 프리스트인 경우 모든 키 이벤트를 p로 보냄
+    if (controllerType === "0") {
       if (clients.p == null) return;
       clients.p.emit("keyUp", data);
       return;
     }
-    // 컨트롤러 d인 경우 모든 키 이벤트를 d로 보냄
-    if (controllerType === "d") {
+    // 컨트롤러 용기사인 경우 모든 키 이벤트를 d로 보냄
+    if (controllerType === "9") {
       if (clients.d == null) return;
       clients.d.emit("keyUp", data);
       return;
@@ -137,18 +136,26 @@ io.on("connection", (socket) => {
   });
 
   //- m이 원격으로 컨트롤러 조종
+  // 0=용기사 , 0=프리스트
   socket.on("toggleController", (data) => {
     // m이 아닌 경우 리턴
     if (socket !== clients.m) return;
+
+    // 혹시모르니 로어 끄기
+    if (loreInterval != null) {
+      console.log("로어 중지");
+      stopLore();
+    }
+
     // 컨트롤러가 정해진게 없을때 p,d 입력받으면 해당 컨트롤러로 전환
-    if (controllerType === null && (data === "p" || data === "d")) {
+    if (controllerType === null && (data === "0" || data === "9")) {
       controllerType = data;
       clients.m.emit("msg", true);
       return;
     }
 
-    // p 컨트롤러 끄기
-    if (controllerType === "p" && data === "p") {
+    // 프리스트 컨트롤러 끄기
+    if (controllerType === "9" && data === "9") {
       controllerType = null;
       clients.m.emit("msg", false);
       return;

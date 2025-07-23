@@ -26,18 +26,20 @@ socket.on("msg", (msg) => {
 
 // 키 입력감지인데, 윈도우만 가능..
 gkl.addListener((e) => {
+  if (e.name.toLowerCase().includes("mouse")) return;
+
   // 키다운
   if (e.state === "DOWN") {
     const key = e.name.toLowerCase();
     // 컨트롤러 조작이 아닌경우 굳이 보내지 않음
     if (!isController) return;
-    if (exceptionKey.includes(key)) return;
     console.log(`[A] 키 다운: ${key}`, isController);
     socket.emit("keyDown", key.replaceAll(" ", ""));
     return;
   }
 
   // 키업
+
   const key = e.name.toLowerCase();
   console.log(`[A] 키 업: ${key}`, isController);
   if (key === "p") {
