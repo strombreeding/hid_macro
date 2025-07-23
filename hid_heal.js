@@ -51,18 +51,20 @@ const KEY_CODES = {
   9: 0x26,
   0: 0x27,
 
+  return: 0x28,
+  enter: 0x28,
+  space: 0x2c,
+  escape: 0x29,
+  backspace: 0x2a,
+
   uparrow: 0x52,
   downarrow: 0x51,
   leftarrow: 0x50,
   rightarrow: 0x4f,
 
-  leftshift: 0x02, // modifier bitmask
   leftctrl: 0x01,
+  leftshift: 0x02,
   leftalt: 0x04,
-
-  return: 0x28, // Enter 키
-  enter: 0x28, // Enter 키 (별칭)
-  space: 0x2c,
 };
 
 // HID 입력 함수
