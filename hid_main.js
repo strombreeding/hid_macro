@@ -155,29 +155,29 @@ io.on("connection", (socket) => {
     }
 
     // 프리스트 컨트롤러 끄기
-    if (controllerType === "9" && data === "9") {
+    if (controllerType === "0" && data === "0") {
       controllerType = null;
       clients.m.emit("msg", false);
       return;
     }
 
     // d 컨트롤러 끄기
-    if (controllerType === "d" && data === "d") {
+    if (controllerType === "9" && data === "9") {
       controllerType = null;
       clients.m.emit("msg", false);
       return;
     }
 
     // p 컨트롤러에서 d로 전환
-    if (controllerType === "p" && data === "d") {
-      controllerType = "d";
+    if (controllerType === "0" && data === "9") {
+      controllerType = "9";
       clients.m.emit("msg", true);
       return;
     }
 
     // d 컨트롤러에서 p로 전환
-    if (controllerType === "d" && data === "p") {
-      controllerType = "p";
+    if (controllerType === "9" && data === "0") {
+      controllerType = "0";
       clients.m.emit("msg", true);
       return;
     }

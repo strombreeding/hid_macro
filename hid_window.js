@@ -42,13 +42,16 @@ gkl.addListener((e) => {
 
   const key = e.name.toLowerCase();
   console.log(`[A] 키 업: ${key}`, isController);
-  if (key === "p") {
-    console.log("토글 컨트롤러 변경", "p");
-    socket.emit("toggleController", "p");
+  if (isController) {
+    socket.emit("keyUp", key.replaceAll(" ", ""));
     return;
   }
-  if (key === "d") {
-    socket.emit("toggleController", "d");
+  if (key === "0") {
+    socket.emit("toggleController", "0");
+    return;
+  }
+  if (key === "9") {
+    socket.emit("toggleController", "9");
     return;
   }
   if (key === "l") {
@@ -62,7 +65,7 @@ gkl.addListener((e) => {
 
   if (!isController) return;
 
-  socket.emit("keyUp", key.replaceAll(" ", ""));
+  // socket.emit("keyUp", key.replaceAll(" ", ""));
   return;
 });
 
