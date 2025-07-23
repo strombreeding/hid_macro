@@ -17,14 +17,14 @@ let loreInterval = null;
 const emitLore = () => {
   if (clients.d == null) return;
   console.log("로어 키 입력");
-  clients.d.emit("keyDown", "x");
-  clients.d.emit("keyUp", "x");
+  clients.d.emit("keyDown", "leftshift");
+  clients.d.emit("keyUp", "leftshift");
 };
 
 const emitHeal = () => {
   if (clients.p == null) return;
-  clients.p.emit("keyDown", "x");
-  clients.p.emit("keyUp", "x");
+  clients.p.emit("keyDown", "leftctrl");
+  clients.p.emit("keyUp", "leftctrl");
 };
 
 const randomHealExec = () => {
@@ -74,10 +74,10 @@ io.on("connection", (socket) => {
 
   socket.on("keyDown", (data) => {
     // 이건 m에서 올것임.
-    console.log(`수신된 키다운`, data);
 
     // 컨트롤러 변경키는 막음
     if (exceptionKey.includes(data)) return;
+    console.log(`수신된 키다운`, data);
 
     // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "p") {
@@ -95,10 +95,10 @@ io.on("connection", (socket) => {
 
   socket.on("keyUp", (data) => {
     // 이건 m에서 올것임.
-    console.log(`수신된 키업`, data);
 
     // 컨트롤러 변경키는 막음
     if (exceptionKey.includes(data)) return;
+    console.log(`수신된 키업`, data);
 
     // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "p") {

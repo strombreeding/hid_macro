@@ -1,6 +1,8 @@
 const { GlobalKeyboardListener } = require("node-global-key-listener");
 const { io } = require("socket.io-client");
 
+const exceptionKey = ["p", "d", "l", "x"];
+
 const gkl = new GlobalKeyboardListener();
 const socket = io("https://c-link.co.kr"); // ← 실제 I 서버 주소로 수정
 const express = require("express");
@@ -29,6 +31,7 @@ gkl.addListener((e) => {
     const key = e.name.toLowerCase();
     // 컨트롤러 조작이 아닌경우 굳이 보내지 않음
     if (!isController) return;
+    if (exceptionKey.includes(key)) return;
     console.log(`[A] 키 다운: ${key}`, isController);
     socket.emit("keyDown", key.replaceAll(" ", ""));
     return;
