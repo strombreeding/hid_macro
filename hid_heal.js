@@ -102,12 +102,12 @@ async function sendHIDKey(key, down) {
 }
 
 socket.on("connect", () => {
-  console.log("[D] I 서버에 연결됨");
-  socket.emit("register", "d");
+  console.log("[P] I 서버에 연결됨");
+  socket.emit("register", "p");
 });
 
 socket.on("msg", (msg) => {
-  console.log("[I → D] 수신 메시지:", msg);
+  console.log("[I → P] 수신 메시지:", msg);
 });
 
 socket.on("keyDown", async (key) => {
