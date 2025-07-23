@@ -107,11 +107,11 @@ socket.on("msg", (msg) => {
 });
 
 socket.on("keyDown", async (key) => {
-  sendHIDKey(key.replaceAlll(" ", ""), true);
+  sendHIDKey(key.replaceAll(" ", ""), true);
   // }
 });
 
 socket.on("keyUp", async (key) => {
-  sendHIDKey(key.replaceAlll(" ", ""), false);
+  sendHIDKey(key.replaceAll(" ", ""), false);
   // }
 });

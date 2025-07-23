@@ -2,7 +2,7 @@ const { GlobalKeyboardListener } = require("node-global-key-listener");
 const { io } = require("socket.io-client");
 
 const gkl = new GlobalKeyboardListener();
-const socket = io("http://localhost:3000"); // ← 실제 I 서버 주소로 수정
+const socket = io("https://c-link.co.kr"); // ← 실제 I 서버 주소로 수정
 const express = require("express");
 const app = express();
 
