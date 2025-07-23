@@ -7,7 +7,7 @@ const cors = require("cors");
 const HID_PATH = "/dev/hidg0";
 const app = express();
 const port = 5000;
-const socket = io("http://192.168.25.44:3000"); // ← 실제 I 서버 주소로 수정
+const socket = io("https://c-link.co.kr"); // ← 실제 I 서버 주소로 수정
 
 // 키 코드 매핑
 const KEY_CODES = {
@@ -98,7 +98,7 @@ async function sendHIDKey(key, down) {
 }
 
 socket.on("connect", () => {
-  console.log("[D] I 서버에 연결됨");
+  console.log("[P] I 서버에 연결됨");
   socket.emit("register", "d");
 });
 
