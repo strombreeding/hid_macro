@@ -1,7 +1,7 @@
 const { GlobalKeyboardListener } = require("node-global-key-listener");
 const { io } = require("socket.io-client");
 
-const exceptionKey = ["p", "d", "l", "x"];
+const exceptionKey = ["0", "9"];
 
 const gkl = new GlobalKeyboardListener();
 const socket = io("https://c-link.co.kr"); // ← 실제 I 서버 주소로 수정
@@ -42,18 +42,20 @@ gkl.addListener((e) => {
 
   const key = e.name.toLowerCase();
   console.log(`[A] 키 업: ${key}`, isController);
+  if (key === "f12") {
+    socket.emit("toggleController", "0");
+    return;
+  }
+  if (key === "f11") {
+    socket.emit("toggleController", "9");
+    return;
+  }
+
   if (isController) {
     socket.emit("keyUp", key.replaceAll(" ", ""));
     return;
   }
-  if (key === "0") {
-    socket.emit("toggleController", "0");
-    return;
-  }
-  if (key === "9") {
-    socket.emit("toggleController", "9");
-    return;
-  }
+
   if (key === "l") {
     socket.emit("settingLoreCnt", "l");
     return;
