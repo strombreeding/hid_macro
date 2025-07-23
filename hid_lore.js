@@ -90,10 +90,8 @@ async function sendHIDKey(key, down) {
 
   try {
     if (down && !pressedKeies.includes(key)) {
-      pressedKeies.push(key);
       fs.writeFileSync(HID_PATH, buf); // Key Down
     } else {
-      pressedKeies.splice(pressedKeies.indexOf(key), 1);
       fs.writeFileSync(HID_PATH, Buffer.alloc(8)); // Key Up
     }
   } catch (err) {
@@ -111,11 +109,20 @@ socket.on("msg", (msg) => {
 });
 
 socket.on("keyDown", async (key) => {
+  if (pressedKeies.includes(key))
+    return console.log("이미 눌린 키 입니다. 키업을 하세요");
+  console.log("[D] 키 다운:", key);
+  pressedKeies.push(key);
+
   sendHIDKey(key.replaceAll(" ", ""), true);
   // }
 });
 
 socket.on("keyUp", async (key) => {
+  if (!pressedKeies.includes(key))
+    return console.log("눌린 키가 없습니다. 키를 눌러주세요");
+  pressedKeies.splice(pressedKeies.indexOf(key), 1);
+  console.log("[D] 키 업:", key);
   sendHIDKey(key.replaceAll(" ", ""), false);
   // }
 });
