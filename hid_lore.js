@@ -49,14 +49,18 @@ const KEY_CODES = {
   9: 0x26,
   0: 0x27,
 
-  up: 0x52,
-  down: 0x51,
-  left: 0x50,
-  right: 0x4f,
+  uparrow: 0x52,
+  downarrow: 0x51,
+  leftarrow: 0x50,
+  rightarrow: 0x4f,
 
-  lshift: 0x02, // modifier bitmask
-  lctrl: 0x01,
-  lalt: 0x04,
+  leftshift: 0x02, // modifier bitmask
+  leftctrl: 0x01,
+  leftalt: 0x04,
+
+  return: 0x28, // Enter 키
+  enter: 0x28, // Enter 키 (별칭)
+  space: 0x2c,
 };
 
 // HID 입력 함수
@@ -102,30 +106,12 @@ socket.on("msg", (msg) => {
   console.log("[I → D] 수신 메시지:", msg);
 });
 
-socket.on("key", async (key) => {
-  console.log("[D] 키 입력:", key, new Date().toISOString());
-  // 로어키 lShift 라고 가정
-  // if (key === "lshift") {
-  //   sendHIDKey("lshift", true);
-  //   sendHIDKey("lshift", false);
-  // } else {
-  sendHIDKey(key, true);
-  sendHIDKey(key, false);
+socket.on("keyDown", async (key) => {
+  sendHIDKey(key.replaceAlll(" ", ""), true);
   // }
 });
 
-// app.use(cors());
-
-// app.get("/key", (req, res) => {
-//   try {
-//     const key = req.query.key;
-//     sendHIDKey(key);
-//     res.json({ message: "success" });
-//   } catch (err) {
-//     throw new Error("실패");
-//   }
-// });
-
-// app.listen(port, "0.0.0.0", () => {
-//   console.log(`[R] Express API 포트 열림: http://localhost:${port}`);
-// });
+socket.on("keyUp", async (key) => {
+  sendHIDKey(key.replaceAlll(" ", ""), false);
+  // }
+});

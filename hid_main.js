@@ -8,17 +8,23 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+const exceptionKey = ["p", "d", "l", "x"];
 const clients = {}; // { m: socket, p: socket, d: socket }
 let controllerType = null; // p,d 중 하나. m이 입력하는 키를 어떤 컨트롤러가 받을지
 let loreCnt = 1;
 let loreInterval = null;
 
 const emitLore = () => {
-  clients.d.emit("key", "x");
+  if (clients.d == null) return;
+  console.log("로어 키 입력");
+  clients.d.emit("keyDown", "x");
+  clients.d.emit("keyUp", "x");
 };
 
 const emitHeal = () => {
-  clients.p.emit("key", "x");
+  if (clients.p == null) return;
+  clients.p.emit("keyDown", "x");
+  clients.p.emit("keyUp", "x");
 };
 
 const randomHealExec = () => {
@@ -63,37 +69,59 @@ io.on("connection", (socket) => {
   socket.on("register", (id) => {
     clients[id] = socket;
     console.log(`등록됨: ${id} (${socket.id})`);
-    clients[id].emit("msg", `등록됨: ${id} (${socket.id})`);
+    clients[id].emit("register", `등록됨: ${id} (${socket.id})`);
   });
 
-  socket.on("key", (data) => {
+  socket.on("keyDown", (data) => {
     // 이건 m에서 올것임.
-    console.log(`수신된 키`, data);
+    console.log(`수신된 키다운`, data);
 
     // 컨트롤러 변경키는 막음
-    if (controllerType === null && (data === "p" || data === "d")) return;
-
-    // 로어, 힐해주기  인터벌 키
-    if (data === "x") {
-      if (loreInterval == null) {
-        console.log("로어 시작");
-        startLore();
-      } else {
-        console.log("로어 중지");
-        stopLore();
-      }
-      return;
-    }
+    if (controllerType === null && exceptionKey.includes(data)) return;
 
     // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "p") {
-      clients.p.emit("key", data);
+      if (clients.p == null) return;
+      clients.p.emit("keyDown", data);
       return;
     }
     // 컨트롤러 d인 경우 모든 키 이벤트를 d로 보냄
     if (controllerType === "d") {
-      clients.d.emit("key", data);
+      if (clients.d == null) return;
+      clients.d.emit("keyDown", data);
       return;
+    }
+  });
+
+  socket.on("keyUp", (data) => {
+    // 이건 m에서 올것임.
+    console.log(`수신된 키업`, data);
+
+    // 컨트롤러 변경키는 막음
+    if (controllerType === null && exceptionKey.includes(data)) return;
+
+    // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
+    if (controllerType === "p") {
+      if (clients.p == null) return;
+      clients.p.emit("keyUp", data);
+      return;
+    }
+    // 컨트롤러 d인 경우 모든 키 이벤트를 d로 보냄
+    if (controllerType === "d") {
+      if (clients.d == null) return;
+      clients.d.emit("keyUp", data);
+      return;
+    }
+  });
+
+  socket.on("toggleLore", (data) => {
+    if (data !== "x") return;
+    if (loreInterval == null) {
+      console.log("로어 시작");
+      startLore();
+    } else {
+      console.log("로어 중지");
+      stopLore();
     }
   });
 
@@ -111,35 +139,39 @@ io.on("connection", (socket) => {
   //- m이 원격으로 컨트롤러 조종
   socket.on("toggleController", (data) => {
     // m이 아닌 경우 리턴
-    if (socket.id !== clients.m) return;
-
+    if (socket !== clients.m) return;
     // 컨트롤러가 정해진게 없을때 p,d 입력받으면 해당 컨트롤러로 전환
     if (controllerType === null && (data === "p" || data === "d")) {
       controllerType = data;
+      clients.m.emit("msg", true);
       return;
     }
 
     // p 컨트롤러 끄기
     if (controllerType === "p" && data === "p") {
       controllerType = null;
+      clients.m.emit("msg", false);
       return;
     }
 
     // d 컨트롤러 끄기
     if (controllerType === "d" && data === "d") {
       controllerType = null;
+      clients.m.emit("msg", false);
       return;
     }
 
     // p 컨트롤러에서 d로 전환
     if (controllerType === "p" && data === "d") {
       controllerType = "d";
+      clients.m.emit("msg", true);
       return;
     }
 
     // d 컨트롤러에서 p로 전환
     if (controllerType === "d" && data === "p") {
       controllerType = "p";
+      clients.m.emit("msg", true);
       return;
     }
   });

@@ -6,19 +6,39 @@ const socket = io("http://localhost:3000"); // ← 실제 I 서버 주소로 수
 const express = require("express");
 const app = express();
 
+let isController = false;
+
 socket.on("connect", () => {
   console.log("[A] I 서버에 연결됨");
   socket.emit("register", "m");
 });
 
-socket.on("msg", (msg) => {
+socket.on("register", (msg) => {
   console.log("[I → A] 수신 메시지:", msg);
 });
 
-// 키입력 get으로 해보기
-app.get("/key", (req, res) => {
-  const key = req.query.key;
+socket.on("msg", (msg) => {
+  console.log("[I → A] 수신 메시지:", msg);
+  isController = msg;
+});
+
+// 키 입력감지인데, 윈도우만 가능..
+gkl.addListener((e) => {
+  // 키다운
+  if (e.state === "DOWN") {
+    const key = e.name.toLowerCase();
+    // 컨트롤러 조작이 아닌경우 굳이 보내지 않음
+    if (!isController) return;
+    console.log(`[A] 키 다운: ${key}`, isController);
+    socket.emit("keyDown", key.replaceAll(" ", ""));
+    return;
+  }
+
+  // 키업
+  const key = e.name.toLowerCase();
+  console.log(`[A] 키 업: ${key}`, isController);
   if (key === "p") {
+    console.log("토글 컨트롤러 변경", "p");
     socket.emit("toggleController", "p");
     return;
   }
@@ -30,29 +50,16 @@ app.get("/key", (req, res) => {
     socket.emit("settingLoreCnt", "l");
     return;
   }
+  if (key === "x") {
+    socket.emit("toggleLore", "x");
+    return;
+  }
 
-  socket.emit("key", key);
+  if (!isController) return;
 
-  console.log(`[A] 키 입력: ${key}`);
-  res.send("OK");
+  socket.emit("keyUp", key.replaceAll(" ", ""));
+  return;
 });
-
-// 키 입력감지인데, 윈도우만 가능..
-// gkl.addListener((e) => {
-//   if (e.state === "DOWN") {
-//     const key = e.name.toLowerCase();
-//     console.log(`[A] 키 입력: ${key}`);
-//     if (key === "p") {
-//       console.log("[A] 'p' 키 → B 전송");
-//       socket.emit("key", { target: "p", value: "p 키 눌림" });
-//     } else if (key === "d") {
-//       console.log("[A] 'd' 키 → C 전송");
-//       socket.emit("key", { target: "d", value: "d 키 눌림" });
-//     } else {
-//       socket.emit("key", { target: "broadcast", value: key });
-//     }
-//   }
-// });
 
 app.listen(8080, () => {
   console.log("서버 실행 중...");
