@@ -9,6 +9,8 @@ const app = express();
 const port = 5000;
 const socket = io("https://c-link.co.kr"); // ← 실제 I 서버 주소로 수정
 
+const pressedKeies = [];
+
 // 키 코드 매핑
 const KEY_CODES = {
   a: 0x04,
@@ -87,9 +89,11 @@ async function sendHIDKey(key, down) {
   buf[2] = keycode;
 
   try {
-    if (down) {
+    if (down && !pressedKeies.includes(key)) {
+      pressedKeies.push(key);
       fs.writeFileSync(HID_PATH, buf); // Key Down
     } else {
+      pressedKeies.splice(pressedKeies.indexOf(key), 1);
       fs.writeFileSync(HID_PATH, Buffer.alloc(8)); // Key Up
     }
   } catch (err) {

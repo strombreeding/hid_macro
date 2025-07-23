@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
     console.log(`수신된 키다운`, data);
 
     // 컨트롤러 변경키는 막음
-    if (controllerType === null && exceptionKey.includes(data)) return;
+    if (exceptionKey.includes(data)) return;
 
     // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "p") {
@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
     console.log(`수신된 키업`, data);
 
     // 컨트롤러 변경키는 막음
-    if (controllerType === null && exceptionKey.includes(data)) return;
+    if (exceptionKey.includes(data)) return;
 
     // 컨트롤러 p인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "p") {
