@@ -6,24 +6,54 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Vite 개발 서버
+    methods: ["GET", "POST"],
+  },
+});
 
-const exceptionKey = ["p", "d", "l", "x"];
 const clients = {}; // { m: socket, p: socket, d: socket }
 let controllerType = null; // p,d 중 하나. m이 입력하는 키를 어떤 컨트롤러가 받을지
 let loreCnt = 1;
 let loreInterval = null;
 
+const webData = {
+  loreCnt,
+  controllerType,
+  client: {
+    p: clients.p != null,
+    d: clients.d != null,
+    m: clients.m != null,
+  },
+  isLore: loreInterval != null,
+};
+
+// 정적 파일 서빙 (빌드된 Vite 앱)
+app.use("/front", express.static("frontend/dist"));
+
+// /front 엔드포인트 - 빌드된 Vite 앱 반환
+app.get("/front", (req, res) => {
+  res.sendFile("frontend/dist/index.html", { root: "." });
+});
+
+const emitWebData = () => {
+  if (clients.w == null) return;
+  clients.w.emit("webData", webData);
+};
+
 const emitLore = () => {
   if (clients.d == null) return;
   console.log("로어 키 입력");
   clients.d.emit("keyDown", "leftshift");
+  new Promise((resolve) => setTimeout(resolve, 100));
   clients.d.emit("keyUp", "leftshift");
 };
 
 const emitHeal = () => {
   if (clients.p == null) return;
   clients.p.emit("keyDown", "leftctrl");
+  new Promise((resolve) => setTimeout(resolve, 100));
   clients.p.emit("keyUp", "leftctrl");
 };
 
@@ -54,11 +84,13 @@ const startLore = () => {
       randomLoreExec();
     }
   }, 6500);
+  emitWebData();
 };
 
 const stopLore = () => {
   clearInterval(loreInterval);
   loreInterval = null;
+  emitWebData();
 };
 
 // 클라이언트 소켓 연결
@@ -70,13 +102,14 @@ io.on("connection", (socket) => {
     clients[id] = socket;
     console.log(`등록됨: ${id} (${socket.id})`);
     clients[id].emit("register", `등록됨: ${id} (${socket.id})`);
+    emitWebData();
   });
 
   socket.on("keyDown", (data) => {
     // 이건 m에서 올것임.
 
     // 컨트롤러 변경키는 막음
-    if (controllerType === null && exceptionKey.includes(data)) return;
+    if (controllerType === null) return;
     console.log(`수신된 키다운`, data);
 
     // 컨트롤러 프리스트인 경우 모든 키 이벤트를 p로 보냄
@@ -97,7 +130,7 @@ io.on("connection", (socket) => {
     // 이건 m에서 올것임.
 
     // 컨트롤러 변경키는 막음
-    if (controllerType === null && exceptionKey.includes(data)) return;
+    if (controllerType === null) return;
     console.log(`수신된 키업`, data);
     // 컨트롤러 프리스트인 경우 모든 키 이벤트를 p로 보냄
     if (controllerType === "0") {
@@ -114,7 +147,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("toggleLore", (data) => {
-    if (data !== "x") return;
+    if (data !== "f3") return;
     if (loreInterval == null) {
       console.log("로어 시작");
       startLore();
@@ -125,7 +158,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("settingLoreCnt", (data) => {
-    if (data !== "l") return;
+    if (data !== "f4") return;
 
     if (loreCnt > 1) {
       loreCnt = 1;
@@ -133,6 +166,15 @@ io.on("connection", (socket) => {
       loreCnt = 2;
     }
     console.log("로어카운트 : ", loreCnt);
+    emitWebData();
+  });
+
+  socket.on("execSymbol", (data) => {
+    if (data !== "f5") return;
+    console.log("심볼 사용");
+    clients.p.emit("keyDown", "pagedown");
+    new Promise((resolve) => setTimeout(resolve, 100));
+    clients.p.emit("keyUp", "pagedown");
   });
 
   //- m이 원격으로 컨트롤러 조종
@@ -151,6 +193,7 @@ io.on("connection", (socket) => {
     if (controllerType === null && (data === "0" || data === "9")) {
       controllerType = data;
       clients.m.emit("msg", true);
+      emitWebData();
       return;
     }
 
@@ -158,6 +201,7 @@ io.on("connection", (socket) => {
     if (controllerType === "0" && data === "0") {
       controllerType = null;
       clients.m.emit("msg", false);
+      emitWebData();
       return;
     }
 
@@ -165,6 +209,7 @@ io.on("connection", (socket) => {
     if (controllerType === "9" && data === "9") {
       controllerType = null;
       clients.m.emit("msg", false);
+      emitWebData();
       return;
     }
 
@@ -172,6 +217,7 @@ io.on("connection", (socket) => {
     if (controllerType === "0" && data === "9") {
       controllerType = "9";
       clients.m.emit("msg", true);
+      emitWebData();
       return;
     }
 
@@ -179,6 +225,7 @@ io.on("connection", (socket) => {
     if (controllerType === "9" && data === "0") {
       controllerType = "0";
       clients.m.emit("msg", true);
+      emitWebData();
       return;
     }
   });
@@ -190,6 +237,7 @@ io.on("connection", (socket) => {
         delete clients[id];
       }
     }
+    emitWebData();
   });
 });
 
