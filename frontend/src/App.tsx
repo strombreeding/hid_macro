@@ -17,7 +17,7 @@ const App: React.FC = () => {
   const [data, setData] = useState<WebData | null>(null);
   useEffect(() => {
     // 소켓 연결 설정
-    const socket = io("https://c-link.co.kr/socket"); // hid_main.js 서버 포트
+    const socket = io("https://c-link.co.kr"); // hid_main.js 서버 포트
 
     // 연결 성공 시
     socket.on("connect", () => {
