@@ -29,7 +29,6 @@ app.get("/front", (req, res) => {
 
 const emitWebData = () => {
   if (clients.w == null) return;
-  console.log("webData 전송", data);
   const webData = {
     loreCnt,
     controllerType,
@@ -40,6 +39,7 @@ const emitWebData = () => {
     },
     isLore: loreInterval != null,
   };
+  console.log("webData 전송", webData);
   clients.w.emit("webData", JSON.stringify(webData));
 };
 
