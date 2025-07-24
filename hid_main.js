@@ -30,7 +30,7 @@ const webData = {
 };
 
 // 정적 파일 서빙 (빌드된 Vite 앱)
-app.use("/front", express.static("frontend/dist"));
+app.use(express.static("frontend/dist"));
 
 // /front 엔드포인트 - 빌드된 Vite 앱 반환
 app.get("/front", (req, res) => {
