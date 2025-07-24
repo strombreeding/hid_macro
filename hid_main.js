@@ -38,9 +38,10 @@ app.get("/front", (req, res) => {
   res.sendFile("frontend/dist/index.html", { root: "." });
 });
 
-const emitWebData = () => {
+const emitWebData = (data) => {
   if (clients.w == null) return;
-  clients.w.emit("webData", webData);
+  console.log("webData 전송", data);
+  clients.w.emit("webData", data);
 };
 
 const emitLore = () => {
@@ -85,13 +86,13 @@ const startLore = () => {
       randomLoreExec();
     }
   }, 6500);
-  emitWebData();
+  emitWebData(webData);
 };
 
 const stopLore = () => {
   clearInterval(loreInterval);
   loreInterval = null;
-  emitWebData();
+  emitWebData(webData);
 };
 
 // 클라이언트 소켓 연결
@@ -103,7 +104,7 @@ io.on("connection", (socket) => {
     clients[id] = socket;
     console.log(`등록됨: ${id} (${socket.id})`);
     clients[id].emit("register", `등록됨: ${id} (${socket.id})`);
-    emitWebData();
+    emitWebData(webData);
   });
 
   socket.on("keyDown", (data) => {
@@ -167,7 +168,7 @@ io.on("connection", (socket) => {
       loreCnt = 2;
     }
     console.log("로어카운트 : ", loreCnt);
-    emitWebData();
+    emitWebData(webData);
   });
 
   socket.on("execSymbol", (data) => {
@@ -194,7 +195,7 @@ io.on("connection", (socket) => {
     if (controllerType === null && (data === "0" || data === "9")) {
       controllerType = data;
       clients.m.emit("msg", true);
-      emitWebData();
+      emitWebData(webData);
       return;
     }
 
@@ -202,7 +203,7 @@ io.on("connection", (socket) => {
     if (controllerType === "0" && data === "0") {
       controllerType = null;
       clients.m.emit("msg", false);
-      emitWebData();
+      emitWebData(webData);
       return;
     }
 
@@ -210,7 +211,7 @@ io.on("connection", (socket) => {
     if (controllerType === "9" && data === "9") {
       controllerType = null;
       clients.m.emit("msg", false);
-      emitWebData();
+      emitWebData(webData);
       return;
     }
 
@@ -218,7 +219,7 @@ io.on("connection", (socket) => {
     if (controllerType === "0" && data === "9") {
       controllerType = "9";
       clients.m.emit("msg", true);
-      emitWebData();
+      emitWebData(webData);
       return;
     }
 
@@ -226,7 +227,7 @@ io.on("connection", (socket) => {
     if (controllerType === "9" && data === "0") {
       controllerType = "0";
       clients.m.emit("msg", true);
-      emitWebData();
+      emitWebData(webData);
       return;
     }
   });
@@ -238,7 +239,7 @@ io.on("connection", (socket) => {
         delete clients[id];
       }
     }
-    emitWebData();
+    emitWebData(webData);
   });
 });
 
