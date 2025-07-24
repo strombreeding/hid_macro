@@ -41,7 +41,7 @@ app.get("/front", (req, res) => {
 const emitWebData = (data) => {
   if (clients.w == null) return;
   console.log("webData 전송", data);
-  clients.w.emit("webData", data);
+  clients.w.emit("webData", JSON.stringify(data));
 };
 
 const emitLore = () => {
