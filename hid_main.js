@@ -97,7 +97,6 @@ const randomLoreExec = () => {
 };
 
 const startLore = () => {
-  emitWebData();
   emitLore();
   randomRayExec();
 
@@ -112,6 +111,7 @@ const startLore = () => {
       emitPetFeed();
     }
   }, 2800);
+  emitWebData();
 };
 
 const stopLore = () => {
