@@ -1,6 +1,6 @@
 const { io } = require("socket.io-client");
 const { SerialPort } = require("serialport");
-const { list } = require("@serialport/list");
+// const { list } = require("@serialport/list");
 
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
@@ -10,20 +10,19 @@ const VENDOR_ID = "046d"; // Logitech (예시)
 const PRODUCT_ID = "c31c"; // Multifunction Composite Gadget
 
 async function findPiPort() {
-  const ports = await list();
-
-  for (const port of ports) {
-    // vendorId, productId는 소문자로 비교
-    if (
-      port.vendorId?.toLowerCase() === VENDOR_ID &&
-      port.productId?.toLowerCase() === PRODUCT_ID
-    ) {
-      console.log("라즈베리파이 시리얼 포트 발견:", port.path);
-      return port.path;
-    }
-  }
-
-  throw new Error("라즈베리파이 시리얼 포트를 찾을 수 없습니다.");
+  // const ports = await list();
+  // for (const port of ports) {
+  //   // vendorId, productId는 소문자로 비교
+  //   if (
+  //     port.vendorId?.toLowerCase() === VENDOR_ID &&
+  //     port.productId?.toLowerCase() === PRODUCT_ID
+  //   ) {
+  //     console.log("라즈베리파이 시리얼 포트 발견:", port.path);
+  //     return port.path;
+  //   }
+  // }
+  // throw new Error("라즈베리파이 시리얼 포트를 찾을 수 없습니다.");
+  return "/dev/hidg0";
 }
 
 async function main() {

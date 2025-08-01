@@ -2,13 +2,15 @@
   "name": "hid_project",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:d": "node hid_d.js",
+    "start:p": "node hid_p.js",
+    "start:pi": "node hid_pi.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@serialport/list": "^13.0.0",
     "express": "^5.1.0",
     "node-global-key-listener": "^0.3.0",
     "serialport": "^13.0.0",
