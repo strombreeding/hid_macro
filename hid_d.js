@@ -1,6 +1,7 @@
 const { io } = require("socket.io-client");
 const { SerialPort } = require("serialport");
-
+const fs = require("fs");
+const path = require("path");
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
 
@@ -12,7 +13,7 @@ const POSSIBLE_PATTERNS = [
   "ttyAMA", // 일부 라즈베리파이 시리얼
 ];
 
-export async function findPiPort() {
+async function findPiPort() {
   const deviceDir = "/dev";
   const entries = fs.readdirSync(deviceDir);
 
