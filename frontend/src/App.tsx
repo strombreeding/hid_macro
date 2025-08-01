@@ -84,6 +84,15 @@ const App: React.FC = () => {
           버프받기!
         </button>
       )}
+      {socketState && (
+        <button
+          onClick={() => {
+            socketState.emit("toggleLore", "f3");
+          }}
+        >
+          로어 시작/종료
+        </button>
+      )}
     </div>
   );
 };
