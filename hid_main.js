@@ -22,44 +22,54 @@ const emitLore = () => {
   if (clients.d == null) return;
   console.log("로어 키 입력");
   clients.d.emit("keyDown", "leftshift");
-  new Promise((resolve) => setTimeout(resolve, 100));
+  new Promise((resolve) => setTimeout(resolve, 1000));
   clients.d.emit("keyUp", "leftshift");
 };
 
 const emitHeal = () => {
   if (clients.p == null) return;
   clients.p.emit("keyDown", "leftctrl");
-  new Promise((resolve) => setTimeout(resolve, 100));
+  new Promise((resolve) => setTimeout(resolve, 1000));
   clients.p.emit("keyUp", "leftctrl");
 };
 
+const emitRay = () => {
+  if (clients.p == null) return;
+  clients.p.emit("keyDown", "end");
+  new Promise((resolve) => setTimeout(resolve, 1000));
+  clients.p.emit("keyUp", "end");
+};
+const randomRayExec = () => {
+  const randomTime = Math.random() * 500;
+  setTimeout(() => {
+    emitRay();
+  }, randomTime);
+};
+
 const randomHealExec = () => {
-  const randomHealTime = Math.random() * 2000 + 4000;
+  const randomHealTime = Math.random() * 1000 + 1500;
   setTimeout(() => {
     emitHeal();
   }, randomHealTime);
 };
 
 const randomLoreExec = () => {
-  const randomTime = Math.random() * 1000 + 2500;
+  const randomTime = Math.random() * 1000 + 1900;
   setTimeout(() => {
     emitLore();
   }, randomTime);
 };
 
 const startLore = () => {
+  emitLore();
+  randomRayExec();
+
   loreInterval = setInterval(() => {
     // 로어를 먼저 쓰고
-    emitLore();
-
+    randomLoreExec();
     // 랜덤하게 힐 쓰기
     randomHealExec();
-
-    // 로어를 2번 써야할 경우 2.5~3.5초 랜덤하게 한번 더 사용
-    if (loreCnt > 1) {
-      randomLoreExec();
-    }
-  }, 6500);
+  }, 3100);
 };
 
 const stopLore = () => {
@@ -143,10 +153,19 @@ io.on("connection", (socket) => {
 
   socket.on("execSymbol", (data) => {
     if (data !== "f5") return;
-    console.log("심볼 사용");
-    clients.p.emit("keyDown", "pagedown");
-    new Promise((resolve) => setTimeout(resolve, 100));
-    clients.p.emit("keyUp", "pagedown");
+    console.log("심볼 사용,드래곤블러드 쓰기");
+    clients.d.emit("keyDown", "space");
+    new Promise((resolve) => setTimeout(resolve, 1500));
+    clients.d.emit("keyUp", "space");
+
+    clients.p.emit("keyDown", "pageup");
+    new Promise((resolve) => setTimeout(resolve, 1000));
+    clients.p.emit("keyUp", "pageup");
+    setTimeout(() => {
+      clients.p.emit("keyDown", "pagedown");
+      new Promise((resolve) => setTimeout(resolve, 1000));
+      clients.p.emit("keyUp", "pagedown");
+    }, 1200);
   });
 
   //- m이 원격으로 컨트롤러 조종

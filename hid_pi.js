@@ -143,6 +143,6 @@ port.on("error", (err) => {
   console.error("❌ 시리얼 포트 에러:", err.message);
 });
 
-port.on("data", (data) => {
-  console.log("[D] 시리얼 데이터:", data);
-});
+// port.on("data", (data) => {
+//   console.log("[D] 시리얼 데이터:", data);
+// });
