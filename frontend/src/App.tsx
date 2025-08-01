@@ -15,6 +15,7 @@ interface WebData {
 // 메인 앱 컴포넌트
 const App: React.FC = () => {
   const [data, setData] = useState<WebData | null>(null);
+  const [socketState, setSocketState] = useState<any>(null);
   useEffect(() => {
     // 소켓 연결 설정
     const socket = io("https://c-link.co.kr"); // hid_main.js 서버 포트
@@ -22,6 +23,7 @@ const App: React.FC = () => {
     // 연결 성공 시
     socket.on("connect", () => {
       console.log("서버에 연결되었습니다:", socket.id);
+      setSocketState(socket);
     });
 
     socket.emit("register", "w");
@@ -72,6 +74,16 @@ const App: React.FC = () => {
       <h4>프리스트 컨트롤러 : {data?.client.p ? "연결" : "미연결"}</h4>
       <h4>디버그 컨트롤러 : {data?.client.d ? "연결" : "미연결"}</h4>
       <h4>마스터 컨트롤러 : {data?.client.m ? "연결" : "미연결"}</h4>
+
+      {socketState && (
+        <button
+          onClick={() => {
+            socketState.emit("execSymbol", "f5");
+          }}
+        >
+          버프받기!
+        </button>
+      )}
     </div>
   );
 };
