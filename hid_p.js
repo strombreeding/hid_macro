@@ -1,28 +1,34 @@
 const { io } = require("socket.io-client");
 const { SerialPort } = require("serialport");
-// const { list } = require("@serialport/list");
-
+const fs = require("fs");
+const path = require("path");
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
 
-// USB Gadget 설정에 맞춘 vendorId, productId (예시)
-const VENDOR_ID = "046d"; // Logitech (예시)
-const PRODUCT_ID = "c31c"; // Multifunction Composite Gadget
+// 라즈베리파이를 식별할 수 있는 패턴들 (경우에 따라 수정 가능)
+const POSSIBLE_PATTERNS = [
+  "usbmodem",
+  "usbserial",
+  "wchusbserial", // CH340/CP210x 계열
+  "ttyAMA", // 일부 라즈베리파이 시리얼
+];
 
 async function findPiPort() {
-  // const ports = await list();
-  // for (const port of ports) {
-  //   // vendorId, productId는 소문자로 비교
-  //   if (
-  //     port.vendorId?.toLowerCase() === VENDOR_ID &&
-  //     port.productId?.toLowerCase() === PRODUCT_ID
-  //   ) {
-  //     console.log("라즈베리파이 시리얼 포트 발견:", port.path);
-  //     return port.path;
-  //   }
-  // }
-  // throw new Error("라즈베리파이 시리얼 포트를 찾을 수 없습니다.");
-  return "/dev/hidg0";
+  const deviceDir = "/dev";
+  const entries = fs.readdirSync(deviceDir);
+
+  const candidates = entries
+    .filter((name) =>
+      POSSIBLE_PATTERNS.some((pattern) => name.includes(pattern))
+    )
+    .map((name) => path.join(deviceDir, name));
+
+  if (candidates.length === 0) {
+    throw new Error("라즈베리파이로 보이는 시리얼 포트를 찾을 수 없습니다.");
+  }
+
+  // 여기선 일단 첫 번째 후보 사용하지만, 나중에 더 정교한 필터링 가능
+  return candidates[0];
 }
 
 async function main() {

@@ -122,14 +122,14 @@ parser.on("data", (line) => {
   if (command === "keyDown") {
     if (!pressedKeies.includes(key)) {
       pressedKeies.push(key);
-      console.log("[D] 키 다운:", key);
+      console.log("[PI] 키 다운:", key);
       sendHIDReport();
     }
   } else if (command === "keyUp") {
     const idx = pressedKeies.indexOf(key);
     if (idx !== -1) {
       pressedKeies.splice(idx, 1);
-      console.log("[D] 키 업:", key);
+      console.log("[PI] 키 업:", key);
       sendHIDReport();
     }
   }
