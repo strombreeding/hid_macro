@@ -1,7 +1,6 @@
 const { GlobalKeyboardListener } = require("node-global-key-listener");
 const { io } = require("socket.io-client");
 
-const exceptionKey = ["0", "9"];
 const usedKeyList = new Set();
 
 const gkl = new GlobalKeyboardListener();
