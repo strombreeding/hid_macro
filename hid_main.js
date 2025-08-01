@@ -17,6 +17,7 @@ const clients = {}; // { m: socket, p: socket, d: socket }
 let controllerType = null; // p,d 중 하나. m이 입력하는 키를 어떤 컨트롤러가 받을지
 let loreCnt = 1;
 let loreInterval = null;
+let petFeed = 0;
 
 // 정적 파일 서빙 (빌드된 Vite 앱)
 app.use(express.static("frontend/dist"));
@@ -64,6 +65,16 @@ const emitRay = () => {
   new Promise((resolve) => setTimeout(resolve, 1000));
   clients.p.emit("keyUp", "end");
 };
+
+const emitPetFeed = () => {
+  if (clients.d == null || clients.p == null) return;
+  clients.d.emit("keyDown", "d");
+  clients.p.emit("keyDown", "d");
+  new Promise((resolve) => setTimeout(resolve, 150));
+  clients.d.emit("keyUp", "d");
+  clients.p.emit("keyUp", "d");
+};
+
 const randomRayExec = () => {
   const randomTime = Math.random() * 500;
   setTimeout(() => {
@@ -79,7 +90,7 @@ const randomHealExec = () => {
 };
 
 const randomLoreExec = () => {
-  const randomTime = Math.random() * 1000 + 1900;
+  const randomTime = Math.random() * 1000 + 1750;
   setTimeout(() => {
     emitLore();
   }, randomTime);
@@ -95,7 +106,12 @@ const startLore = () => {
     randomLoreExec();
     // 랜덤하게 힐 쓰기
     randomHealExec();
-  }, 3100);
+    petFeed++;
+    if (petFeed >= 100) {
+      petFeed = 0;
+      emitPetFeed();
+    }
+  }, 2800);
 };
 
 const stopLore = () => {
