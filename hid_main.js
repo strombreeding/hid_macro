@@ -55,7 +55,7 @@ const emitLore = () => {
 const emitHeal = () => {
   if (clients.p == null) return;
   clients.p.emit("keyDown", "leftctrl");
-  new Promise((resolve) => setTimeout(resolve, 1000));
+  new Promise((resolve) => setTimeout(resolve, 900));
   clients.p.emit("keyUp", "leftctrl");
 };
 
@@ -69,7 +69,7 @@ const emitPetFeed = () => {
 };
 
 const randomHealExec = () => {
-  const randomHealTime = Math.random() * 1000 + 1500;
+  const randomHealTime = Math.random() * 1000 + 500;
   setTimeout(() => {
     emitHeal();
   }, randomHealTime);
@@ -95,7 +95,7 @@ const startLore = () => {
       petFeed = 0;
       emitPetFeed();
     }
-  }, 2800);
+  }, 2650);
   emitWebData();
 };
 
