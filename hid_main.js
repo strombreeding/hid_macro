@@ -23,7 +23,7 @@ let petFeed = 0;
 app.use(express.static("frontend/dist"));
 
 // /front 엔드포인트 - 빌드된 Vite 앱 반환
-app.get("/front", (req, res) => {
+app.get("/hid_macro", (req, res) => {
   console.log("index.html 요청");
   res.sendFile("frontend/dist/index.html", { root: "." });
 });
