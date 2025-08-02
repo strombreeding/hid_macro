@@ -65,16 +65,9 @@ const emitPetFeed = () => {
   port.write("keyUp d\n");
 };
 
-const randomLoreExec = () => {
-  const randomTime = Math.random() * 1000 + 1550;
-  setTimeout(() => {
-    emitLore();
-  }, randomTime);
-};
-
 const startLore = () => {
-  emitLore();
   loreInterval = true;
+  emitLore();
 };
 
 const stopLore = () => {
@@ -115,10 +108,14 @@ async function main() {
     socket.on("lore", (msg) => {
       if (msg === "start") {
         loreInterval = true;
+        startLore();
+        console.log("로어 시작");
       }
 
       if (msg === "stop") {
         loreInterval = false;
+        stopLore();
+        console.log("로어 중지");
       }
     });
 

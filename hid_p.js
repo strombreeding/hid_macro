@@ -45,8 +45,8 @@ const emitPetFeed = () => {
 };
 
 const startHeal = () => {
-  emitHeal();
   healInterval = true;
+  emitHeal();
   console.log("힐 시작");
 };
 
