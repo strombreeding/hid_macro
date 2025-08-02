@@ -27,6 +27,11 @@ while True:
         img = np.array(screenshot)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+        # ./test1.png로 저장
+        output_path = "test1.png"
+        mss.tools.to_png(screenshot.rgb, screenshot.size, output=output_path)
+        print(f"스크린샷이 {output_path}에 저장되었습니다.")
+
     detected = False
 
     for name, template, (w, h) in templates:
