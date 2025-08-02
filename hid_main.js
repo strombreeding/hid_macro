@@ -48,7 +48,7 @@ const emitLore = () => {
   if (clients.d == null) return;
   console.log("로어 키 입력");
   clients.d.emit("keyDown", "leftshift");
-  new Promise((resolve) => setTimeout(resolve, 1000));
+  new Promise((resolve) => setTimeout(resolve, 2200));
   clients.d.emit("keyUp", "leftshift");
 };
 
@@ -57,13 +57,6 @@ const emitHeal = () => {
   clients.p.emit("keyDown", "leftctrl");
   new Promise((resolve) => setTimeout(resolve, 1000));
   clients.p.emit("keyUp", "leftctrl");
-};
-
-const emitRay = () => {
-  if (clients.p == null) return;
-  clients.p.emit("keyDown", "end");
-  new Promise((resolve) => setTimeout(resolve, 1000));
-  clients.p.emit("keyUp", "end");
 };
 
 const emitPetFeed = () => {
@@ -75,13 +68,6 @@ const emitPetFeed = () => {
   clients.p.emit("keyUp", "d");
 };
 
-const randomRayExec = () => {
-  const randomTime = Math.random() * 500;
-  setTimeout(() => {
-    emitRay();
-  }, randomTime);
-};
-
 const randomHealExec = () => {
   const randomHealTime = Math.random() * 1000 + 1500;
   setTimeout(() => {
@@ -90,7 +76,7 @@ const randomHealExec = () => {
 };
 
 const randomLoreExec = () => {
-  const randomTime = Math.random() * 1000 + 1750;
+  const randomTime = Math.random() * 1000 + 1550;
   setTimeout(() => {
     emitLore();
   }, randomTime);
@@ -98,7 +84,6 @@ const randomLoreExec = () => {
 
 const startLore = () => {
   emitLore();
-  randomRayExec();
 
   loreInterval = setInterval(() => {
     // 로어를 먼저 쓰고

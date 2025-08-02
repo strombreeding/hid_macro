@@ -72,7 +72,7 @@ const App: React.FC = () => {
       <h2>로어 상태 : {data?.isLore ? "O" : "X"}</h2>
 
       <h4>프리스트 컨트롤러 : {data?.client.p ? "연결" : "미연결"}</h4>
-      <h4>디버그 컨트롤러 : {data?.client.d ? "연결" : "미연결"}</h4>
+      <h4>용기사 컨트롤러 : {data?.client.d ? "연결" : "미연결"}</h4>
       <h4>마스터 컨트롤러 : {data?.client.m ? "연결" : "미연결"}</h4>
 
       {socketState && (
