@@ -103,7 +103,7 @@ const App: React.FC = () => {
         </button>
       )}
 
-      <audio ref={audioRef} src="./alaram.mp3" preload="auto" />
+      <audio ref={audioRef} src="./buff.mp3" preload="auto" />
     </div>
   );
 };
