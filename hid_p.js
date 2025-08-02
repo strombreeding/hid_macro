@@ -13,6 +13,50 @@ const POSSIBLE_PATTERNS = [
   "ttyAMA", // 일부 라즈베리파이 시리얼
 ];
 
+let healTimer = null;
+let healInterval = null;
+let petFeed = 0;
+let port;
+
+const emitHeal = () => {
+  if (!healInterval) return;
+  const randomHealTime = Math.random() * 1000 + 500;
+
+  port.write("keyDown leftctrl\n");
+  new Promise((resolve) => setTimeout(resolve, 900));
+  port.write("keyUp leftctrl\n");
+
+  petFeed++;
+  if (petFeed >= 100) {
+    petFeed = 0;
+    emitPetFeed();
+  }
+
+  setTimeout(() => {
+    emitHeal();
+  }, randomHealTime);
+};
+
+const emitPetFeed = () => {
+  if (port == null) return;
+  port.write("keyDown d\n");
+  new Promise((resolve) => setTimeout(resolve, 150));
+  port.write("keyUp d\n");
+};
+
+const startHeal = () => {
+  emitHeal();
+  healInterval = true;
+  console.log("힐 시작");
+};
+
+const stopHeal = () => {
+  clearTimeout(healTimer);
+  healTimer = null;
+  healInterval = false;
+  console.log("힐 중지");
+};
+
 async function findPiPort() {
   const deviceDir = "/dev";
   const entries = fs.readdirSync(deviceDir);
@@ -35,7 +79,7 @@ async function main() {
   try {
     const serialPath = await findPiPort();
 
-    const port = new SerialPort({
+    port = new SerialPort({
       path: serialPath,
       baudRate: 115200,
     });
@@ -58,6 +102,18 @@ async function main() {
 
     socket.on("msg", (msg) => {
       console.log("[I → P] 수신 메시지:", msg);
+    });
+
+    socket.on("heal", (msg) => {
+      console.log("[I → P] 수신 메시지:", msg);
+      if (msg === "start") {
+        startHeal();
+        return;
+      }
+      if (msg === "stop") {
+        stopHeal();
+        return;
+      }
     });
 
     socket.on("keyDown", (key) => {

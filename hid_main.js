@@ -44,67 +44,6 @@ const emitWebData = () => {
   clients.w.emit("webData", JSON.stringify(webData));
 };
 
-const emitLore = () => {
-  if (clients.d == null) return;
-  console.log("로어 키 입력");
-  clients.d.emit("keyDown", "leftshift");
-  new Promise((resolve) => setTimeout(resolve, 2200));
-  clients.d.emit("keyUp", "leftshift");
-};
-
-const emitHeal = () => {
-  if (clients.p == null) return;
-  clients.p.emit("keyDown", "leftctrl");
-  new Promise((resolve) => setTimeout(resolve, 900));
-  clients.p.emit("keyUp", "leftctrl");
-};
-
-const emitPetFeed = () => {
-  if (clients.d == null || clients.p == null) return;
-  clients.d.emit("keyDown", "d");
-  clients.p.emit("keyDown", "d");
-  new Promise((resolve) => setTimeout(resolve, 150));
-  clients.d.emit("keyUp", "d");
-  clients.p.emit("keyUp", "d");
-};
-
-const randomHealExec = () => {
-  const randomHealTime = Math.random() * 1000 + 500;
-  setTimeout(() => {
-    emitHeal();
-  }, randomHealTime);
-};
-
-const randomLoreExec = () => {
-  const randomTime = Math.random() * 1000 + 1550;
-  setTimeout(() => {
-    emitLore();
-  }, randomTime);
-};
-
-const startLore = () => {
-  emitLore();
-
-  loreInterval = setInterval(() => {
-    // 로어를 먼저 쓰고
-    randomLoreExec();
-    // 랜덤하게 힐 쓰기
-    randomHealExec();
-    petFeed++;
-    if (petFeed >= 100) {
-      petFeed = 0;
-      emitPetFeed();
-    }
-  }, 2650);
-  emitWebData();
-};
-
-const stopLore = () => {
-  clearInterval(loreInterval);
-  loreInterval = null;
-  emitWebData();
-};
-
 // 클라이언트 소켓 연결
 io.on("connection", (socket) => {
   console.log(`새 연결: ${socket.id}`);
@@ -161,11 +100,16 @@ io.on("connection", (socket) => {
     if (data !== "f3") return;
     if (loreInterval == null) {
       console.log("로어 시작");
-      startLore();
+      loreInterval = true;
+      clients.d.emit("lore", "start");
+      clients.p.emit("heal", "start");
     } else {
+      loreInterval = false;
       console.log("로어 중지");
-      stopLore();
+      clients.d.emit("lore", "stop");
+      clients.p.emit("heal", "stop");
     }
+    emitWebData();
   });
 
   socket.on("settingLoreCnt", (data) => {
@@ -206,7 +150,8 @@ io.on("connection", (socket) => {
     // 혹시모르니 로어 끄기
     if (loreInterval != null) {
       console.log("로어 중지");
-      stopLore();
+      clients.d.emit("lore", "stop");
+      clients.p.emit("heal", "stop");
     }
 
     // 컨트롤러가 정해진게 없을때 p,d 입력받으면 해당 컨트롤러로 전환

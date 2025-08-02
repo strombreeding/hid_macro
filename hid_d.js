@@ -5,6 +5,12 @@ const path = require("path");
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
 
+let port;
+
+let loreInterval = false;
+let petFeed = 0;
+let loreTimer = null;
+
 // 라즈베리파이를 식별할 수 있는 패턴들 (경우에 따라 수정 가능)
 const POSSIBLE_PATTERNS = [
   "usbmodem",
@@ -31,11 +37,57 @@ async function findPiPort() {
   return candidates[0];
 }
 
+const emitLore = () => {
+  if (!loreInterval) return;
+  console.log("로어 키 입력");
+
+  port.write("keyDown leftshift\n");
+  new Promise((resolve) => setTimeout(resolve, 2200));
+  port.write("keyUp leftshift\n");
+
+  petFeed++;
+  if (petFeed >= 100) {
+    petFeed = 0;
+    emitPetFeed();
+  }
+
+  const randomTime = Math.random() * 1000 + 1500;
+
+  loreTimer = setTimeout(() => {
+    emitLore();
+  }, randomTime);
+};
+
+const emitPetFeed = () => {
+  if (port == null) return;
+  port.write("keyDown d\n");
+  new Promise((resolve) => setTimeout(resolve, 150));
+  port.write("keyUp d\n");
+};
+
+const randomLoreExec = () => {
+  const randomTime = Math.random() * 1000 + 1550;
+  setTimeout(() => {
+    emitLore();
+  }, randomTime);
+};
+
+const startLore = () => {
+  emitLore();
+  loreInterval = true;
+};
+
+const stopLore = () => {
+  clearTimeout(loreTimer);
+  loreTimer = null;
+  loreInterval = false;
+};
+
 async function main() {
   try {
     const serialPath = await findPiPort();
 
-    const port = new SerialPort({
+    port = new SerialPort({
       path: serialPath,
       baudRate: 115200,
     });
@@ -58,6 +110,16 @@ async function main() {
 
     socket.on("msg", (msg) => {
       console.log("[I → D] 수신 메시지:", msg);
+    });
+
+    socket.on("lore", (msg) => {
+      if (msg === "start") {
+        loreInterval = true;
+      }
+
+      if (msg === "stop") {
+        loreInterval = false;
+      }
     });
 
     socket.on("keyDown", (key) => {
