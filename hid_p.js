@@ -20,7 +20,7 @@ let port;
 
 const emitHeal = () => {
   if (!healInterval) return;
-  const randomHealTime = Math.random() * 1000 + 500;
+  const randomHealTime = Math.random() * 1000 + 1000;
 
   port.write("keyDown leftctrl\n");
   new Promise((resolve) => setTimeout(resolve, 900));
