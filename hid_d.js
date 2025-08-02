@@ -1,7 +1,10 @@
 const { io } = require("socket.io-client");
 const { SerialPort } = require("serialport");
 const fs = require("fs");
+const player = require("play-sound")();
 const path = require("path");
+const express = require("express");
+const app = express();
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
 
@@ -10,6 +13,7 @@ let port;
 let loreInterval = false;
 let petFeed = 0;
 let loreTimer = null;
+let plaing = false;
 
 // 라즈베리파이를 식별할 수 있는 패턴들 (경우에 따라 수정 가능)
 const POSSIBLE_PATTERNS = [
@@ -40,9 +44,10 @@ async function findPiPort() {
 const emitLore = () => {
   if (!loreInterval) return;
   console.log("로어 키 입력");
+  const randomTime = Math.floor(Math.random() * (2500 - 2200 + 1)) + 2200;
 
   port.write("keyDown leftshift\n");
-  new Promise((resolve) => setTimeout(resolve, 2200));
+  new Promise((resolve) => setTimeout(resolve, randomTime - 300));
   port.write("keyUp leftshift\n");
 
   petFeed++;
@@ -50,8 +55,6 @@ const emitLore = () => {
     petFeed = 0;
     emitPetFeed();
   }
-
-  const randomTime = Math.random() * 1000 + 1500;
 
   loreTimer = setTimeout(() => {
     emitLore();
@@ -61,7 +64,7 @@ const emitLore = () => {
 const emitPetFeed = () => {
   if (port == null) return;
   port.write("keyDown d\n");
-  new Promise((resolve) => setTimeout(resolve, 150));
+  new Promise((resolve) => setTimeout(resolve, 50));
   port.write("keyUp d\n");
 };
 
@@ -140,3 +143,24 @@ async function main() {
 }
 
 main();
+
+app.listen(8083, () => {
+  console.log("서버 실행 중");
+});
+
+app.get("/check", (req, res) => {
+  if (plaing) {
+    res.send("already playing");
+    return;
+  }
+  plaing = true;
+  player.play("./alaram.mp3", (err) => {
+    if (err) {
+      console.log("오디오 재생 중 오류 발생:", err);
+    }
+  });
+  setTimeout(() => {
+    plaing = false;
+  }, 22000);
+  res.send("ok");
+});

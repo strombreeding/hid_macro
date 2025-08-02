@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 interface WebData {
@@ -16,6 +16,9 @@ interface WebData {
 const App: React.FC = () => {
   const [data, setData] = useState<WebData | null>(null);
   const [socketState, setSocketState] = useState<any>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     // 소켓 연결 설정
     const socket = io("https://c-link.co.kr"); // hid_main.js 서버 포트
@@ -79,6 +82,12 @@ const App: React.FC = () => {
         <button
           onClick={() => {
             socketState.emit("execSymbol", "f5");
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
+            }
+            timerRef.current = setTimeout(() => {
+              audioRef.current?.play();
+            }, 5000);
           }}
         >
           버프받기!
@@ -93,6 +102,8 @@ const App: React.FC = () => {
           로어 시작/종료
         </button>
       )}
+
+      <audio ref={audioRef} src="./alaram.mp3" preload="auto" />
     </div>
   );
 };

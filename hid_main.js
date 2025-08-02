@@ -126,19 +126,32 @@ io.on("connection", (socket) => {
 
   socket.on("execSymbol", (data) => {
     if (data !== "f5") return;
+    // 혹시모르니 로어 끄기
+    if (loreInterval != null) {
+      console.log("로어 중지");
+      clients.d.emit("lore", "stop");
+      clients.p.emit("heal", "stop");
+      loreInterval = null;
+      new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+
     console.log("심볼 사용,드래곤블러드 쓰기");
     clients.d.emit("keyDown", "space");
     new Promise((resolve) => setTimeout(resolve, 1500));
     clients.d.emit("keyUp", "space");
 
     clients.p.emit("keyDown", "pageup");
-    new Promise((resolve) => setTimeout(resolve, 1000));
+    new Promise((resolve) => setTimeout(resolve, 500));
     clients.p.emit("keyUp", "pageup");
     setTimeout(() => {
       clients.p.emit("keyDown", "pagedown");
       new Promise((resolve) => setTimeout(resolve, 1000));
       clients.p.emit("keyUp", "pagedown");
+      clients.d.emit("lore", "start");
+      clients.p.emit("heal", "start");
+      loreInterval = true;
     }, 1200);
+    emitWebData();
   });
 
   //- m이 원격으로 컨트롤러 조종
@@ -152,6 +165,7 @@ io.on("connection", (socket) => {
       console.log("로어 중지");
       clients.d.emit("lore", "stop");
       clients.p.emit("heal", "stop");
+      loreInterval = null;
     }
 
     // 컨트롤러가 정해진게 없을때 p,d 입력받으면 해당 컨트롤러로 전환

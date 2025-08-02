@@ -4,7 +4,9 @@ const fs = require("fs");
 const path = require("path");
 // 소켓 서버 주소
 const SOCKET_SERVER = "https://c-link.co.kr";
-
+const player = require("play-sound")();
+const express = require("express");
+const app = express();
 // 라즈베리파이를 식별할 수 있는 패턴들 (경우에 따라 수정 가능)
 const POSSIBLE_PATTERNS = [
   "usbmodem",
@@ -17,13 +19,14 @@ let healTimer = null;
 let healInterval = null;
 let petFeed = 0;
 let port;
+let plaing = false;
 
 const emitHeal = () => {
   if (!healInterval) return;
   const randomHealTime = Math.random() * 1000 + 1000;
 
   port.write("keyDown leftctrl\n");
-  new Promise((resolve) => setTimeout(resolve, 900));
+  new Promise((resolve) => setTimeout(resolve, 300));
   port.write("keyUp leftctrl\n");
 
   petFeed++;
@@ -40,7 +43,7 @@ const emitHeal = () => {
 const emitPetFeed = () => {
   if (port == null) return;
   port.write("keyDown d\n");
-  new Promise((resolve) => setTimeout(resolve, 150));
+  new Promise((resolve) => setTimeout(resolve, 50));
   port.write("keyUp d\n");
 };
 
@@ -137,3 +140,24 @@ async function main() {
 }
 
 main();
+
+app.listen(8083, () => {
+  console.log("서버 실행 중");
+});
+
+app.get("/check", (req, res) => {
+  if (plaing) {
+    res.send("already playing");
+    return;
+  }
+  plaing = true;
+  player.play("./alaram.mp3", (err) => {
+    if (err) {
+      console.log("오디오 재생 중 오류 발생:", err);
+    }
+  });
+  setTimeout(() => {
+    plaing = false;
+  }, 22000);
+  res.send("ok");
+});
