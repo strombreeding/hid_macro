@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
       clients.d.emit("lore", "start");
       clients.p.emit("heal", "start");
     } else {
-      loreInterval = false;
+      loreInterval = null;
       console.log("로어 중지");
       clients.d.emit("lore", "stop");
       clients.p.emit("heal", "stop");
