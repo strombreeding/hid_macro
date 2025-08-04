@@ -17,27 +17,36 @@ const POSSIBLE_PATTERNS = [
 
 let healTimer = null;
 let healInterval = null;
-let petFeed = 0;
 let port;
-let plaing = false;
+let isMonsterExist = false;
+let startTime = 0;
+
+const keydownList = new Set();
 
 const emitHeal = () => {
-  if (!healInterval) return;
-  const randomHealTime = Math.random() * 1000 + 1000;
-
-  port.write("keyDown leftctrl\n");
-  new Promise((resolve) => setTimeout(resolve, 300));
-  port.write("keyUp leftctrl\n");
-
-  petFeed++;
-  if (petFeed >= 100) {
-    petFeed = 0;
-    emitPetFeed();
+  console.log("몬스터 발견 상태 ", isMonsterExist, keydownList.has("leftctrl"));
+  if (!healInterval) {
+    if (keydownList.has("leftctrl")) {
+      port.write("keyUp leftctrl\n");
+      keydownList.delete("leftctrl");
+    }
+    return;
   }
-
+  if (isMonsterExist && !keydownList.has("leftctrl")) {
+    port.write("keyDown leftctrl\n");
+    keydownList.add("leftctrl");
+  }
+  if (!isMonsterExist) {
+    port.write("keyUp leftctrl\n");
+    keydownList.delete("leftctrl");
+    if (startTime + 300000 < Date.now()) {
+      startTime = Date.now();
+      emitPetFeed();
+    }
+  }
   setTimeout(() => {
     emitHeal();
-  }, randomHealTime);
+  }, 1000);
 };
 
 const emitPetFeed = () => {
@@ -78,6 +87,20 @@ async function findPiPort() {
   return candidates[0];
 }
 
+app.listen(8083, () => {
+  console.log("서버 실행 중, 8083");
+});
+
+app.get("/detect", (req, res) => {
+  isMonsterExist = true;
+  res.send("ok");
+});
+
+app.get("/notfound", (req, res) => {
+  isMonsterExist = false;
+  res.send("ok");
+});
+
 async function main() {
   try {
     const serialPath = await findPiPort();
@@ -111,10 +134,12 @@ async function main() {
       console.log("[I → P] 수신 메시지:", msg);
       if (msg === "start") {
         startHeal();
+        startTime = Date.now();
         return;
       }
       if (msg === "stop") {
         stopHeal();
+        startTime = 0;
         return;
       }
     });
@@ -140,24 +165,3 @@ async function main() {
 }
 
 main();
-
-app.listen(8083, () => {
-  console.log("서버 실행 중");
-});
-
-app.get("/check", (req, res) => {
-  if (plaing) {
-    res.send("already playing");
-    return;
-  }
-  plaing = true;
-  player.play("./alaram.mp3", (err) => {
-    if (err) {
-      console.log("오디오 재생 중 오류 발생:", err);
-    }
-  });
-  setTimeout(() => {
-    plaing = false;
-  }, 22000);
-  res.send("ok");
-});
