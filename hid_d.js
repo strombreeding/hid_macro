@@ -48,7 +48,7 @@ const emitLore = () => {
     isMonsterExist,
     keydownList.has("leftshift")
   );
-  if (!healInterval) {
+  if (!loreInterval) {
     if (keydownList.has("leftshift")) {
       port.write("keyUp leftshift\n");
       keydownList.delete("leftshift");
