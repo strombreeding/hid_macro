@@ -87,7 +87,7 @@ const App: React.FC = () => {
             }
             timerRef.current = setTimeout(() => {
               audioRef.current?.play();
-            }, 5000);
+            }, 105000);
           }}
         >
           버프받기!

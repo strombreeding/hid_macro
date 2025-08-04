@@ -126,13 +126,19 @@ io.on("connection", (socket) => {
 
   socket.on("execSymbol", (data) => {
     if (data !== "f5") return;
+
+    console.log("심볼 이벤트 수신");
     // 혹시모르니 로어 끄기
     if (loreInterval != null) {
-      console.log("로어 중지");
-      clients.d.emit("lore", "stop");
-      clients.p.emit("heal", "stop");
-      loreInterval = null;
-      new Promise((resolve) => setTimeout(resolve, 2500));
+      try {
+        console.log("로어 중지");
+        clients.d.emit("lore", "stop");
+        clients.p.emit("heal", "stop");
+        loreInterval = null;
+        new Promise((resolve) => setTimeout(resolve, 2500));
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     console.log("심볼 사용,드래곤블러드 쓰기");
