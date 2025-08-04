@@ -11,9 +11,10 @@ const SOCKET_SERVER = "https://c-link.co.kr";
 let port;
 
 let loreInterval = false;
-let petFeed = 0;
+let startTime = 0;
+let isMonsterExist = false;
 let loreTimer = null;
-let plaing = false;
+const keydownList = new Set();
 
 // 라즈베리파이를 식별할 수 있는 패턴들 (경우에 따라 수정 가능)
 const POSSIBLE_PATTERNS = [
@@ -42,23 +43,33 @@ async function findPiPort() {
 }
 
 const emitLore = () => {
-  if (!loreInterval) return;
-  console.log("로어 키 입력");
-  const randomTime = Math.floor(Math.random() * (2500 - 2200 + 1)) + 2200;
-
-  port.write("keyDown leftshift\n");
-  new Promise((resolve) => setTimeout(resolve, randomTime - 300));
-  port.write("keyUp leftshift\n");
-
-  petFeed++;
-  if (petFeed >= 100) {
-    petFeed = 0;
-    emitPetFeed();
+  console.log(
+    "몬스터 발견 상태 ",
+    isMonsterExist,
+    keydownList.has("leftshift")
+  );
+  if (!healInterval) {
+    if (keydownList.has("leftshift")) {
+      port.write("keyUp leftshift\n");
+      keydownList.delete("leftshift");
+    }
+    return;
   }
-
-  loreTimer = setTimeout(() => {
+  if (isMonsterExist && !keydownList.has("leftshift")) {
+    port.write("keyDown leftshift\n");
+    keydownList.add("leftshift");
+  }
+  if (!isMonsterExist) {
+    port.write("keyUp leftshift\n");
+    keydownList.delete("leftshift");
+    if (startTime + 300000 < Date.now()) {
+      startTime = Date.now();
+      emitPetFeed();
+    }
+  }
+  setTimeout(() => {
     emitLore();
-  }, randomTime);
+  }, 1000);
 };
 
 const emitPetFeed = () => {
@@ -78,6 +89,20 @@ const stopLore = () => {
   loreTimer = null;
   loreInterval = false;
 };
+
+app.listen(8083, () => {
+  console.log("서버 실행 중, 8083");
+});
+
+app.get("/detect", (req, res) => {
+  isMonsterExist = true;
+  res.send("ok");
+});
+
+app.get("/notfound", (req, res) => {
+  isMonsterExist = false;
+  res.send("ok");
+});
 
 async function main() {
   try {
@@ -143,24 +168,3 @@ async function main() {
 }
 
 main();
-
-app.listen(8083, () => {
-  console.log("서버 실행 중");
-});
-
-app.get("/check", (req, res) => {
-  if (plaing) {
-    res.send("already playing");
-    return;
-  }
-  plaing = true;
-  player.play("./alaram.mp3", (err) => {
-    if (err) {
-      console.log("오디오 재생 중 오류 발생:", err);
-    }
-  });
-  setTimeout(() => {
-    plaing = false;
-  }, 22000);
-  res.send("ok");
-});
