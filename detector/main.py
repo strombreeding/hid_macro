@@ -7,7 +7,7 @@ import mss
 # 템플릿 이미지 리스트 불러오기
 templates = []
 
-for i in range(7, 9):
+for i in range(7, 11):
     template = cv2.imread(f"monster{i}.png", cv2.IMREAD_UNCHANGED)  # 알파 채널 포함된 PNG 대응
     if template is None:
         print(f"monster{i}.png 불러오기 실패!")
