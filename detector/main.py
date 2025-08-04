@@ -7,8 +7,8 @@ import mss
 # 템플릿 이미지 리스트 불러오기
 templates = []
 
-for i in range(1, 14):
-    template = cv2.imread(f"rie{i}.png", cv2.IMREAD_UNCHANGED)  # 알파 채널 포함된 PNG 대응
+for i in range(1, 15):
+    template = cv2.imread(f"monster{i}.png", cv2.IMREAD_UNCHANGED)  # 알파 채널 포함된 PNG 대응
     if template is None:
         print(f"rie{i}.png 불러오기 실패!")
         continue
@@ -53,7 +53,7 @@ while True:
 
     for name, template, (w, h) in templates:
         res = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
-        threshold = 0.70
+        threshold = 0.80
         loc = np.where(res >= threshold)
         print(f"{name} 최대 유사도: {res.max():.3f}, 위치: {loc}")
 
