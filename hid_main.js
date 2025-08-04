@@ -130,34 +130,35 @@ io.on("connection", (socket) => {
     console.log("심볼 이벤트 수신");
     // 혹시모르니 로어 끄기
     if (loreInterval != null) {
-      try {
-        console.log("로어 중지");
-        clients.d.emit("lore", "stop");
-        clients.p.emit("heal", "stop");
-        loreInterval = null;
-        new Promise((resolve) => setTimeout(resolve, 2500));
-      } catch (err) {
-        console.log(err);
-      }
+      console.log("로어 중지");
+      clients.d.emit("lore", "stop");
+      clients.p.emit("heal", "stop");
+      loreInterval = null;
     }
 
     console.log("심볼 사용,드래곤블러드 쓰기");
-    clients.d.emit("keyDown", "space");
-    new Promise((resolve) => setTimeout(resolve, 1500));
-    clients.d.emit("keyUp", "space");
+    setTimeout(() => {
+      clients.d.emit("keyDown", "space");
+      new Promise((resolve) => setTimeout(resolve, 1500));
+      clients.d.emit("keyUp", "space");
+    }, 2500);
+    setTimeout(() => {
+      clients.p.emit("keyDown", "pageup");
+      new Promise((resolve) => setTimeout(resolve, 500));
+      clients.p.emit("keyUp", "pageup");
+    }, 1000);
 
-    clients.p.emit("keyDown", "pageup");
-    new Promise((resolve) => setTimeout(resolve, 500));
-    clients.p.emit("keyUp", "pageup");
     setTimeout(() => {
       clients.p.emit("keyDown", "pagedown");
       new Promise((resolve) => setTimeout(resolve, 1000));
       clients.p.emit("keyUp", "pagedown");
+    }, 1200);
+    setTimeout(() => {
       clients.d.emit("lore", "start");
       clients.p.emit("heal", "start");
       loreInterval = true;
-    }, 1200);
-    emitWebData();
+      emitWebData();
+    }, 3000);
   });
 
   //- m이 원격으로 컨트롤러 조종

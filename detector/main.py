@@ -59,6 +59,7 @@ while True:
 
         if len(loc[0]) > 0:
             print(f"{name} 발견됨! GET 요청 전송.")
+            time.sleep(0.15)
             requests.get("http://localhost:8083/detect")
             last_detected_time = time.time()
             detected = True

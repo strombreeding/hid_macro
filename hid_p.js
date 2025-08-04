@@ -23,18 +23,23 @@ let startTime = 0;
 
 const keydownList = new Set();
 
-const emitHeal = () => {
+const sleep = async (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
+const emitHeal = async () => {
   console.log("몬스터 발견 상태 ", isMonsterExist, keydownList.has("leftctrl"));
-  if (!healInterval) {
-    if (keydownList.has("leftctrl")) {
-      port.write("keyUp leftctrl\n");
-      keydownList.delete("leftctrl");
-    }
-    return;
-  }
-  if (isMonsterExist && !keydownList.has("leftctrl")) {
+  if (!healInterval) return;
+  if (isMonsterExist) {
+    port.write("keyDown end\n");
+    await sleep(1200);
+    port.write("keyUp end\n");
+    await sleep(200);
     port.write("keyDown leftctrl\n");
-    keydownList.add("leftctrl");
+    await sleep(2500);
+    port.write("keyUp leftctrl\n");
   }
   if (!isMonsterExist) {
     port.write("keyUp leftctrl\n");
