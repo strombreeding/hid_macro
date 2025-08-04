@@ -14,15 +14,15 @@ app.get("/check", (req, res) => {
     res.send("already playing");
     return;
   }
-  plaing = true;
+  // plaing = true;
   player.play("./alaram.mp3", (err) => {
     if (err) {
       console.log("오디오 재생 중 오류 발생:", err);
     }
   });
-  setTimeout(() => {
-    plaing = false;
-  }, 22000);
+  // setTimeout(() => {
+  //   plaing = false;
+  // }, 22000);
   res.send("ok");
 });
 
