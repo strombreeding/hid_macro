@@ -141,25 +141,25 @@ io.on("connection", (socket) => {
       clients.d.emit("keyDown", "space");
       new Promise((resolve) => setTimeout(resolve, 1500));
       clients.d.emit("keyUp", "space");
-    }, 2500);
-    setTimeout(() => {
-      clients.p.emit("keyDown", "pageup");
-      clients.p.emit("keyUp", "pageup");
       setTimeout(() => {
         clients.d.emit("lore", "start");
       }, 1000);
-    }, 1000);
-
+    }, 2500);
     setTimeout(() => {
-      clients.p.emit("keyDown", "pagedown");
-      new Promise((resolve) => setTimeout(resolve, 1000));
-      clients.p.emit("keyUp", "pagedown");
+      clients.p.emit("keyDown", "pageup");
+      new Promise((resolve) => setTimeout(resolve, 100));
+      clients.p.emit("keyUp", "pageup");
       setTimeout(() => {
-        clients.p.emit("heal", "start");
-        loreInterval = true;
-        emitWebData();
-      }, 1000);
-    }, 1500);
+        clients.p.emit("keyDown", "pagedown");
+        new Promise((resolve) => setTimeout(resolve, 100));
+        clients.p.emit("keyUp", "pagedown");
+        setTimeout(() => {
+          clients.p.emit("heal", "start");
+          loreInterval = true;
+          emitWebData();
+        }, 1500);
+      }, 1200);
+    }, 1000);
   });
 
   //- m이 원격으로 컨트롤러 조종
