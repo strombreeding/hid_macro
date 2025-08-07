@@ -1,0 +1,69 @@
+{
+  "app_feature": "Self-improvement focused dating connections",
+  "screens": [
+    "Home",
+    "Profile Creation",
+    "Match Recommendations",
+    "Content Upload",
+    "User Feed",
+    "Messages"
+  ],
+  "features": {
+    "Home": [
+      "Overview of potential matches",
+      "Daily self-improvement tips",
+      "Trending self-improvement topics"
+    ],
+    "Profile Creation": [
+      "Self-improvement interests selection",
+      "Hobby tagging feature",
+      "Upload personal self-improvement goals"
+    ],
+    "Match Recommendations": [
+      "Match based on self-improvement interests",
+      "Filters for hobbies and goals",
+      "Compatible self-improvement practice matching"
+    ],
+    "Content Upload": [
+      "Create and upload self-improvement posts",
+      "Monetization options for content views",
+      "Track views and earnings"
+    ],
+    "User Feed": [
+      "Scroll through self-improvement content from matches",
+      "Like and comment on posts",
+      "Follow users for updates"
+    ],
+    "Messages": [
+      "Direct messaging with matches",
+      "Share self-improvement content directly",
+      "Voice and video messages support"
+    ]
+  },
+  "figma_prompt": [
+    {
+      "screenName": "Onboarding Screen",
+      "prompt": "Onboarding Screen = Onboarding Screen\n- Layout : A step-by-step user flow with progress indicators. Each step should take the full screen height with vibrant background images related to self-improvement and dating.\n- Key UI Elements : Welcome message, progress bar (1 to 5 steps), input fields for preferences, buttons for Next and Skip, and animated icon illustrations.\n- Visual Style Suggestions : Use a bright and inviting color palette with soft gradients (e.g., pastel blues, pinks, and greens). Incorporate subtle animations for transitions between steps."
+    },
+    {
+      "screenName": "Profile Setup Screen",
+      "prompt": "Profile Setup Screen = Profile Setup Screen\n- Layout : Two-column layout with a profile picture upload area on the left and input fields on the right. Include a progress tracker at the top.\n- Key UI Elements : Profile picture upload button, fields for entering personal details (name, age, interests), sliders for self-rating (confidence, kindness, etc.), and a Save button.\n- Visual Style Suggestions : Use earthy tones with modern typography. Add micro-interactions when the user uploads a picture or fills in details, like a playful bounce animation."
+    },
+    {
+      "screenName": "Self-Improvement Goals Screen",
+      "prompt": "Self-Improvement Goals Screen = Self-Improvement Goals Screen\n- Layout : Card layout showcasing different self-improvement areas (e.g., fitness, mental health, skills). Each card can be clicked for more details.\n- Key UI Elements : Goal cards with images, titles, brief descriptions, a button to set goals, and progress trackers for existing goals.\n- Visual Style Suggestions : Use a vibrant color palette with high-contrast elements to make the cards stand out. Incorporate soft shadows for depth and hover animations for interactivity."
+    },
+    {
+      "screenName": "Matching Screen",
+      "prompt": "Matching Screen = Matching Screen\n- Layout : A swipeable card interface similar to popular dating apps. Each card includes a user's photo, bio, and common self-improvement goals.\n- Key UI Elements : User profile cards, action buttons (like/dislike), swipe gestures, and a match progress indicator.\n- Visual Style Suggestions : Use a sleek, modern style with minimalistic design. Opt for a monochromatic color scheme with accent colors to highlight actions, and add swipe animations for a dynamic feel."
+    },
+    {
+      "screenName": "Conversation Screen",
+      "prompt": "Conversation Screen = Conversation Screen\n- Layout : Single-column layout with a chat interface at the bottom and a user profile section at the top. The chat bubbles can alternate sides.\n- Key UI Elements : Chat bubbles (sender/receiver), typing indicator, input field for messages, and a button for sending messages.\n- Visual Style Suggestions : Soft, calming colors like light green or blue for backgrounds, with darker colors for text. Include animated typing indicators and transition effects when sending messages."
+    },
+    {
+      "screenName": "Personal Growth Tracker Screen",
+      "prompt": "Personal Growth Tracker Screen = Personal Growth Tracker Screen\n- Layout : Scrollable vertical layout with charts and graphs illustrating personal improvements over time, alongside motivational quotes.\n- Key UI Elements : Line charts for progress tracking, quote cards, feedback sections, and interactive elements like sliders or buttons to set new goals.\n- Visual Style Suggestions : Incorporate a blend of calming and motivating colors (like warm yellows and greens). Implement smooth transitions for graph changes and visual feedback for goal achievements."
+    }
+  ]
+}

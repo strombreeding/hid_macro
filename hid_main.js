@@ -144,7 +144,6 @@ io.on("connection", (socket) => {
     }, 2500);
     setTimeout(() => {
       clients.p.emit("keyDown", "pageup");
-      new Promise((resolve) => setTimeout(resolve, 500));
       clients.p.emit("keyUp", "pageup");
     }, 1000);
 

@@ -34,11 +34,11 @@ const emitHeal = async () => {
   if (!healInterval) return;
   if (isMonsterExist) {
     port.write("keyDown end\n");
-    await sleep(1200);
+    await sleep(100);
     port.write("keyUp end\n");
     await sleep(200);
     port.write("keyDown leftctrl\n");
-    await sleep(2500);
+    await sleep(1500);
     port.write("keyUp leftctrl\n");
   }
   if (!isMonsterExist) {
