@@ -39,10 +39,10 @@ const emitHeal = async () => {
       await sleep(50);
       port.write("keyUp leftctrl\n");
       setTimeout(async () => {
-        await sleep(100);
         port.write("keyDown leftctrl\n");
         await sleep(100);
         port.write("keyUp leftctrl\n");
+        rayUsed = false;
       }, 1000);
     }
   }
