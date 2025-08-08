@@ -20,7 +20,7 @@ let healInterval = null;
 let port;
 let isMonsterExist = false;
 let startTime = 0;
-
+let rayUsed = false;
 const keydownList = new Set();
 
 const sleep = async (ms) => {
@@ -33,17 +33,23 @@ const emitHeal = async () => {
   console.log("몬스터 발견 상태 ", isMonsterExist, keydownList.has("leftctrl"));
   if (!healInterval) return;
   if (isMonsterExist) {
-    port.write("keyDown end\n");
-    await sleep(100);
-    port.write("keyUp end\n");
-    await sleep(200);
-    port.write("keyDown leftctrl\n");
-    await sleep(1500);
-    port.write("keyUp leftctrl\n");
+    if (!rayUsed) {
+      rayUsed = true;
+      port.write("keyDown leftctrl\n");
+      await sleep(50);
+      port.write("keyUp leftctrl\n");
+      setTimeout(async () => {
+        await sleep(100);
+        port.write("keyDown leftctrl\n");
+        await sleep(100);
+        port.write("keyUp leftctrl\n");
+      }, 1000);
+    }
   }
   if (!isMonsterExist) {
     port.write("keyUp leftctrl\n");
     keydownList.delete("leftctrl");
+    rayUsed = false;
     if (startTime + 300000 < Date.now()) {
       startTime = Date.now();
       emitPetFeed();
