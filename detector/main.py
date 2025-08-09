@@ -1,48 +1,30 @@
-import cv2
-import numpy as np
-import requests
 import time
-import mss
+import requests
+import cv2
+from image_utils import load_scaled_templates
+from capture_utils import capture_gray_screenshot
 
-# 템플릿 이미지 리스트
+scale_factors = [1.0, 2.0]  # 윈도우 / 맥 대응
 templates = []
 
-# 1배, 2배 버전 생성
-scale_factors = [1.0, 2.0]
-
+# 템플릿 로드
 for i in range(7, 13):
-    img = cv2.imread(f"monster{i}.png", cv2.IMREAD_UNCHANGED)
-    if img is None:
-        print(f"monster{i}.png 불러오기 실패!")
-        continue
-
-    if img.shape[-1] == 4:  # 알파 채널 제거
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    for scale in scale_factors:
-        resized = cv2.resize(img_gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        templates.append((f"monster{i}.png", scale, resized, resized.shape[::-1]))
+    try:
+        scaled_versions = load_scaled_templates(f"monster{i}.png", scale_factors)
+        for scale, tmpl, size in scaled_versions:
+            templates.append((f"monster{i}.png", scale, tmpl, size))
+    except FileNotFoundError as e:
+        print(e)
 
 last_detected_time = 0
 
+# 탐지 루프
 while True:
-    current_time = time.time()
-    if current_time - last_detected_time < 0.5:
+    if time.time() - last_detected_time < 0.5:
         time.sleep(0.5)
         continue
 
-    # 스크린샷 캡처
-    with mss.mss() as sct:
-        monitor = sct.monitors[1]
-        screenshot = sct.grab(monitor)
-        img = np.array(screenshot)
-
-    if img.shape[-1] == 4:
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = capture_gray_screenshot("test1.png", monitor_index=1)
 
     detected = False
     threshold = 0.80
