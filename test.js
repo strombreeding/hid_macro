@@ -57,23 +57,21 @@ app.post("/", (req, res) => {
   res.send("ok");
 });
 
-app.get("/check", (req, res) => {
-  if (plaing) {
-    res.send("already playing");
-    return;
-  }
-  // plaing = true;
-  player.play("./alaram.mp3", (err) => {
-    if (err) {
-      console.log("오디오 재생 중 오류 발생:", err);
-    }
-  });
+app.get("/notfound", (req, res) => {
+  console.log("notfound.");
+  // setTimeout(() => {
+  //   plaing = false;
+  // }, 22000);
+  res.send("ok");
+});
+app.get("/detect", (req, res) => {
+  console.log("detect.");
   // setTimeout(() => {
   //   plaing = false;
   // }, 22000);
   res.send("ok");
 });
 
-app.listen(8080, () => {
+app.listen(8083, () => {
   console.log("서버 실행 중");
 });
