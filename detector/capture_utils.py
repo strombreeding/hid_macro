@@ -3,13 +3,22 @@ import numpy as np
 import mss
 from image_utils import remove_alpha, to_gray
 
-def capture_gray_screenshot(filename="test1.png", monitor_index=1):
-    """전체 화면 캡처 후 알파 제거 + 그레이 변환 + 저장"""
+def capture_screenshot_bgr_and_gray(bgr_filename="screen_bgr.png",
+                                    gray_filename="screen_gray.png",
+                                    monitor_index=1):
     with mss.mss() as sct:
         monitor = sct.monitors[monitor_index]
         screenshot = sct.grab(monitor)
-        img = np.array(screenshot)
+        raw = np.array(screenshot)
 
-    img = remove_alpha(img)
-    gray = to_gray(img)
-    return gray
+    bgr = remove_alpha(raw)
+    gray = to_gray(bgr)
+
+    if bgr_filename:
+        cv2.imwrite(bgr_filename, bgr)
+        print(f"[save] {bgr_filename}")
+    if gray_filename:
+        cv2.imwrite(gray_filename, gray)
+        print(f"[save] {gray_filename}")
+
+    return bgr, gray

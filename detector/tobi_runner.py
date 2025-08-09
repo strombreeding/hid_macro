@@ -1,0 +1,162 @@
+import time
+import cv2
+from image_utils import load_scaled_templates
+from capture_utils import capture_screenshot_bgr_and_gray
+from detection_utils import find_best_match, find_all_matches, draw_point
+
+# ===== 설정 =====
+MONITOR_INDEX = 1
+SCALE_FACTORS = [1.0, 2.0]        # 윈도우=1배, 맥=2배
+THRESHOLD = 0.80                  # 토비 탐지 임계값
+MONSTER_THRESHOLD = 0.75          # 몬스터 탐지 임계값(조금 더 관대)
+
+INTERVAL_S = 0.3                  # 300ms
+LAST_MARK_INTERVAL_S = 1.0        # 마킹 저장 최소 간격(초)
+
+# === 거리/표시 설정 ===
+NEAR_PX = 80          # 가까움 판정 (px)
+FAR_PX  = 220         # 멀음 판정 (px)
+DIST_MARK_INTERVAL_S = 1.0  # 거리 시각화 저장 최소 간격(초)
+
+# ===== 유틸 =====
+def euclidean(a, b):
+    return ((a[0]-b[0])**2 + (a[1]-b[1])**2) ** 0.5
+
+def draw_link_with_distance(bgr_img, p1, p2, out_path="tobi_vs_monster.png", mode="horizontal"):
+    """
+    mode: "euclid" | "horizontal" | "vertical"
+    """
+    import cv2
+    vis = bgr_img.copy()
+
+    if mode == "horizontal":
+        dist = abs(p2[0] - p1[0])            # Δx
+        a, b = p1, (p2[0], p1[1])            # 같은 Y로 수평선
+    elif mode == "vertical":
+        dist = abs(p2[1] - p1[1])            # Δy
+        a, b = p1, (p1[0], p2[1])            # 같은 X로 수직선
+    else:  # euclid
+        dist = ((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2) ** 0.5
+        a, b = p1, p2
+
+    cv2.circle(vis, a, 6, (0,0,255), -1)     # Tobi
+    cv2.circle(vis, b, 6, (0,255,0), -1)     # Monster(투영점 또는 실제점)
+    cv2.line(vis, a, b, (255,255,255), 2)
+
+    mid = ((a[0]+b[0])//2, (a[1]+b[1])//2)
+    cv2.putText(vis, f"{dist:.1f}px", (mid[0]+8, mid[1]-8),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2, cv2.LINE_AA)
+    cv2.imwrite(out_path, vis)
+    return dist
+
+
+
+# ===== 템플릿 로더 =====
+def load_tobi_templates():
+    tpls = []
+    for i in range(1, 6):  # 필요 개수 맞게 조절
+        path = f"tobi{i}.png"
+        try:
+            for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
+                tpls.append((path, scale, tmpl, size))  # 4튜플
+        except FileNotFoundError as e:
+            print(e)
+    return tpls
+
+def load_monster_templates():
+    tpls = []
+    for i in range(7, 15):  # monster7~10
+        path = f"monster{i}.png"
+        try:
+            for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
+                tpls.append((path, scale, tmpl, size))  # 4튜플
+        except FileNotFoundError as e:
+            print(e)
+    return tpls
+
+def main():
+    # 전역 한 번만 로드 (스코프/순서 문제 방지)
+    tobi_templates = load_tobi_templates()
+    monster_templates = load_monster_templates()
+
+    if not tobi_templates:
+        print("[err] tobi 템플릿이 없습니다.")
+        return
+    if not monster_templates:
+        print("[warn] monster 템플릿이 없습니다. 몬스터 탐지는 스킵됩니다.")
+
+    last_mark_time = 0.0
+
+    while True:
+        t0 = time.monotonic()
+
+        # 1) 캡처 (한 프레임 재사용)
+        bgr, gray = capture_screenshot_bgr_and_gray(
+            bgr_filename=None, gray_filename=None, monitor_index=MONITOR_INDEX
+        )
+
+        # 2) 토비 탐지
+        best_tobi = find_best_match(gray, tobi_templates, method=cv2.TM_CCOEFF_NORMED)
+
+        if best_tobi and best_tobi["max_val"] >= THRESHOLD:
+            x, y = best_tobi["top_left"]; w, h = best_tobi["size"]
+            tobi_center = (x + w // 2, y + h // 2)
+            print(f"[tobi] {best_tobi['name']} scale={best_tobi['scale']} "
+                  f"score={best_tobi['max_val']:.3f} center={tobi_center}")
+
+            # 토비 마킹 이미지: 1초에 1번만
+            if time.monotonic() - last_mark_time > LAST_MARK_INTERVAL_S:
+                draw_point(bgr, tobi_center, out_path="tobi_marked.png",
+                           text=f"T:{best_tobi['max_val']:.2f}")
+                last_mark_time = time.monotonic()
+
+            # 3) 몬스터 후보 전체 탐색 → 토비와 가장 가까운 하나 선택
+            if monster_templates:
+                mons = find_all_matches(
+                    gray_screen=gray,
+                    templates=monster_templates,   # 4튜플 리스트
+                    threshold=MONSTER_THRESHOLD,
+                    max_per_template=5
+                )
+                if mons:
+                    nearest = min(mons, key=lambda m: euclidean(tobi_center, m["center"]))
+                    print(f"[nearest-monster] {nearest['name']} "
+                          f"score={nearest['score']:.3f} center={nearest['center']}")
+                    draw_point(bgr, nearest["center"], out_path="tobi_monster_nearest.png", text="M*")
+                    # 거리 계산
+                    dist = euclidean(tobi_center, nearest["center"])
+                    print(f"[distance] tobi↔monster = {dist:.2f}px")
+
+                    # 상태 메시지(가깝다/중간/멀다)
+                    if dist <= NEAR_PX:
+                        print("[range] NEAR")
+                    elif dist >= FAR_PX:
+                        print("[range] FAR")
+                    else:
+                        print("[range] MID")
+
+                    # 1초에 1번만 시각화 저장 (과도한 IO 방지)
+                    if time.monotonic() - last_mark_time > DIST_MARK_INTERVAL_S:
+                        dist = draw_link_with_distance(
+                            bgr,
+                            tobi_center,
+                            nearest["center"],
+                            out_path="tobi_vs_monster.png",
+                            mode="horizontal"  # 가로 거리만 계산/표시
+                        )
+                        print(f"[distance-x] Δx = {dist:.1f}px")
+                        last_mark_time = time.monotonic()
+
+                else:
+                    print("[monster] 후보 없음")
+        else:
+            print("[tobi] 발견되지 않음.")
+
+        # 4) 주기 보정
+        elapsed = time.monotonic() - t0
+        to_sleep = INTERVAL_S - elapsed
+        if to_sleep > 0:
+            time.sleep(to_sleep)
+
+if __name__ == "__main__":
+    main()
