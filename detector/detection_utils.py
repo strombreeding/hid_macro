@@ -1,10 +1,22 @@
 import cv2
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# 추적 상태
+last_mon = {
+    "center": None,      # (x,y)
+    "name": None,        # 마지막으로 매칭된 템플릿 이름
+    "scale": None,       # 1.0 or 2.0
+    "miss": 0            # 연속 실패 카운트
+}
+FRAME_IDX = 0
 
 def find_best_match(gray_screen, templates, method=cv2.TM_CCOEFF_NORMED):
     """
     templates: [(name, scale, tmpl_gray, (w,h))]
     return: dict or None
     """
+    start_time = time.time()
     best = {"name": None, "scale": None, "max_val": -1.0, "top_left": None, "size": None}
     for name, scale, tmpl, (w, h) in templates:
         res = cv2.matchTemplate(gray_screen, tmpl, method)
@@ -14,6 +26,44 @@ def find_best_match(gray_screen, templates, method=cv2.TM_CCOEFF_NORMED):
                 "name": name, "scale": scale, "max_val": max_val,
                 "top_left": max_loc, "size": (w, h),
             })
+    print(f"find_best_match Execution Time: {time.time() - start_time:.2f}s")
+    return best if best["name"] else None
+
+def find_best_match_fast(gray_screen, templates, method=cv2.TM_CCOEFF_NORMED, early_win=0.82):
+    """
+    templates: [(name, scale, tmpl_gray, (w,h))]
+    early_win: 이 값 이상의 매칭 점수가 나오면 조기 종료
+    return: dict or None
+    """
+    start_time = time.time()
+    best = {"name": None, "scale": None, "max_val": -1.0, "top_left": None, "size": None}
+
+    def match_one(tmpl_data):
+        name, scale, tmpl, (w, h) = tmpl_data
+        res = cv2.matchTemplate(gray_screen, tmpl, method)
+        _, max_val, _, max_loc = cv2.minMaxLoc(res)
+        return max_val, name, scale, max_loc, (w, h)
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(match_one, t) for t in templates]
+
+        for f in as_completed(futures):
+            max_val, name, scale, max_loc, size = f.result()
+
+            if max_val > best["max_val"]:
+                best.update({
+                    "name": name, "scale": scale, "max_val": max_val,
+                    "top_left": max_loc, "size": size,
+                })
+
+            # 조기 종료 조건
+            if best["max_val"] >= early_win:
+                # 아직 실행 중인 다른 스레드 작업 취소
+                for future in futures:
+                    future.cancel()
+                break
+
+    print(f"find_best_match_fast: {time.time() - start_time:.2f}s (best={best['max_val']:.3f})")
     return best if best["name"] else None
 
 def find_all_matches(gray_screen, templates, threshold=0.8, method=cv2.TM_CCOEFF_NORMED, max_per_template=5):

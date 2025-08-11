@@ -1,7 +1,6 @@
 const { io } = require("socket.io-client");
 const { SerialPort } = require("serialport");
 const fs = require("fs");
-const player = require("play-sound")();
 const path = require("path");
 const express = require("express");
 const app = express();

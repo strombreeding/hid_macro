@@ -2,7 +2,7 @@ import time
 import requests
 import cv2
 from image_utils import load_scaled_templates
-from capture_utils import capture_gray_screenshot
+from capture_utils import capture_screenshot_bgr_and_gray
 
 scale_factors = [1.0, 2.0]  # 윈도우 / 맥 대응
 templates = []
@@ -24,7 +24,7 @@ while True:
         time.sleep(0.5)
         continue
 
-    gray = capture_gray_screenshot("test1.png", monitor_index=1)
+    bgr, gray = capture_screenshot_bgr_and_gray("test1.png", monitor_index=1)
 
     detected = False
     threshold = 0.80
