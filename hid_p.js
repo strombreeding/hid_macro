@@ -35,15 +35,19 @@ const emitHeal = async () => {
   if (isMonsterExist) {
     if (!rayUsed) {
       rayUsed = true;
-      port.write("keyDown leftctrl\n");
-      await sleep(50);
-      port.write("keyUp leftctrl\n");
+      port.write("keyDown end\n");
+      port.write("keyUp end\n");
       setTimeout(async () => {
         port.write("keyDown leftctrl\n");
-        await sleep(100);
+        await sleep(50);
         port.write("keyUp leftctrl\n");
-        rayUsed = false;
-      }, 1000);
+        setTimeout(async () => {
+          port.write("keyDown leftctrl\n");
+          await sleep(100);
+          port.write("keyUp leftctrl\n");
+          rayUsed = false;
+        }, 1000);
+      }, 2000);
     }
   }
   if (!isMonsterExist) {
