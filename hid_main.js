@@ -168,6 +168,12 @@ io.on("connection", (socket) => {
     clients.f.emit("buff", "start");
   });
 
+  socket.on("forestExit", (data) => {
+    if (data !== "f7") return;
+    console.log("포레스트 종료 이벤트 수신");
+    clients.f.emit("exit", "start");
+  });
+
   //- m이 원격으로 컨트롤러 조종
   // 0=용기사 , 0=프리스트
   socket.on("toggleController", (data) => {

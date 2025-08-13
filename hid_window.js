@@ -84,6 +84,11 @@ gkl.addListener((e) => {
     return;
   }
 
+  if (key === "f7") {
+    socket.emit("forestExit", "f7");
+    return;
+  }
+
   if (!isController) return;
 
   // socket.emit("keyUp", key.replaceAll(" ", ""));

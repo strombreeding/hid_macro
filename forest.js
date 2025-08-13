@@ -36,7 +36,6 @@ app.use(express.json());
 
 let firstExec = false;
 let isLeft = true;
-let buffExecing = false;
 let execing = false;
 // 우측끝 2660
 // 좌측끝 250
@@ -88,7 +87,7 @@ app.get("/xy", (req, res) => {
     }
   }
 
-  if (!execKeys.has("x") && !execKeys.has("leftshift") && !buffExecing) {
+  if (!execKeys.has("x") && !execKeys.has("leftshift")) {
     execKeys.add("leftshift");
     port.write("keyDown leftshift\n");
     port.write("keyUp leftshift\n");
@@ -117,9 +116,8 @@ app.get("/action", (req, res) => {
     return res.send("ok");
   }
 
-  if (px && px < 550) {
+  if (px && px < 550 && !execKeys.has("x")) {
     console.log("레이를 사용하라");
-
     port.write("keyDown x\n");
     execKeys.add("x");
     setTimeout(() => {
@@ -182,31 +180,32 @@ async function main() {
     });
 
     socket.on("buff", () => {
-      if (!buffExecing) {
-        buffExecing = true;
-        port.write("keyDown leftctrl\n");
-        port.write("keyUp leftctrl\n");
+      execing = false;
+      port.write("keyDown leftctrl\n");
+      port.write("keyUp leftctrl\n");
+      setTimeout(() => {
+        // - 심
+        port.write("keyDown pagedown\n");
+        port.write("keyUp pagedown\n");
         setTimeout(() => {
-          // - 심
-          port.write("keyDown pagedown\n");
-          port.write("keyUp pagedown\n");
+          // - 블
+          port.write("keyDown pageup\n");
+          port.write("keyUp pageup\n");
           setTimeout(() => {
-            // - 블
-            port.write("keyDown pageup\n");
-            port.write("keyUp pageup\n");
+            // - 인빈
+            port.write("keyDown end\n");
+            port.write("keyUp end\n");
             setTimeout(() => {
-              // - 인빈
-              port.write("keyDown end\n");
-              port.write("keyUp end\n");
-              setTimeout(() => {
-                // - 초기화
-                buffExecing = false;
-                execing = true;
-              }, 1000);
+              // - 초기화
+              execing = true;
             }, 1000);
-          }, 1200);
+          }, 1500);
         }, 2000);
-      }
+      }, 1000);
+    });
+
+    socket.on("exit", () => {
+      execing = false;
     });
 
     socket.on("disconnect", () => {
