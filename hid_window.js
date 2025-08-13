@@ -79,6 +79,11 @@ gkl.addListener((e) => {
     return;
   }
 
+  if (key === "f6") {
+    socket.emit("execForestBuff", "f6");
+    return;
+  }
+
   if (!isController) return;
 
   // socket.emit("keyUp", key.replaceAll(" ", ""));

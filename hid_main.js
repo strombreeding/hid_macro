@@ -162,6 +162,12 @@ io.on("connection", (socket) => {
     }, 1000);
   });
 
+  socket.on("execForestBuff", (data) => {
+    if (data !== "f6") return;
+    console.log("포레스트 버프 이벤트 수신");
+    clients.f.emit("buff", "start");
+  });
+
   //- m이 원격으로 컨트롤러 조종
   // 0=용기사 , 0=프리스트
   socket.on("toggleController", (data) => {
