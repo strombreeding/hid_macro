@@ -1,5 +1,5 @@
 # utils_matching.py  (or detection_utils.py)
-import cv2, os, time
+import cv2, os, time, copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 cv2.setUseOptimized(True)
@@ -115,3 +115,67 @@ def find_tobi_ultra_fast(
 
     # print(f"tobi ultra: {time.time()-start:.3f}s mv={mv_f:.3f} ROI={'full' if use_full else 'roi'}")
     return result if result["max_val"] >= threshold else None
+
+
+
+def race_find_tobi(
+    gray,
+    dir_templates: dict,     # {"back": [...], "left": [...], "right": [...]}
+    seed_state,              # 메인 TobiState (공유 X, 복사해서 사용)
+    *,
+    threshold=0.80,
+    roi_margin=140,
+    coarse_ratio=0.5,
+    early_win=0.92,
+    max_workers=4,
+    full_search_every=6,
+    frame_index=0,
+    find_fn=None             # 기본: find_tobi_ultra_fast
+):
+    """
+    방향(back/left/right)별 템플릿 세트를 동시에 탐색하고,
+    threshold를 넘긴 **첫 결과**를 반환. (Promise.race 유사)
+    반환: (winner_dir:str, result:dict | None)
+    """
+    if find_fn is None:
+        # 같은 파일(모듈)에 find_tobi_ultra_fast가 있다면 import不要, 없다면 임포트
+        from utils_matching import find_tobi_ultra_fast as _find
+        find_fn = _find
+
+    # 1) 각 방향마다 독립 상태 복사 (레이스 중 상태 간섭 방지)
+    state_map = {d: copy.deepcopy(seed_state) for d in dir_templates.keys()}
+
+    def _run_one(direction):
+        st = state_map[direction]
+        res = find_fn(
+            gray, dir_templates[direction], st,
+            threshold=threshold,
+            roi_margin=roi_margin,
+            coarse_ratio=coarse_ratio,
+            early_win=early_win,
+            max_workers=max_workers,
+            full_search_every=full_search_every,
+            frame_index=frame_index
+        )
+        return direction, res
+
+    # 2) 병렬 실행 → 가장 먼저 성공(threshold 통과)하면 나머지 취소
+    with ThreadPoolExecutor(max_workers=len(dir_templates)) as ex:
+        futures = [ex.submit(_run_one, d) for d in dir_templates.keys()]
+        for f in as_completed(futures):
+            direction, result = f.result()
+            if result and result["max_val"] >= threshold:
+                # 우승 방향 확정 → seed_state에 우승 상태 반영
+                winner_state = state_map[direction]
+                seed_state.center = winner_state.center
+                seed_state.name   = winner_state.name
+                seed_state.miss   = winner_state.miss
+
+                # 아직 돌고 있는 작업은 취소 시도
+                for fu in futures:
+                    fu.cancel()
+                return direction, result
+
+    # 모두 실패
+    seed_state.miss = min(seed_state.miss + 1, 10)
+    return None, None

@@ -5,7 +5,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:d": "node hid_d.js",
     "start:p": "node hid_p.js",
-    "start:pi": "node hid_pi.js"
+    "start:pi": "node hid_pi.js",
+    "군영법사": "node macro_script/barracks.js",
+    "군영전사": "node macro_script/barracks_dragon.js",
+    "골숲": "node macro_script/forest.js"
   },
   "author": "",
   "license": "ISC",

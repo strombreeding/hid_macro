@@ -7,7 +7,7 @@ from detection_utils import find_best_match, find_best_match_fast, find_all_matc
 from detection_utils_v2 import TobiState, find_tobi_ultra_fast, race_find_tobi
 
 
-job = "wizard"
+job = "dragon"
 monster = "skeleton"
 
 
