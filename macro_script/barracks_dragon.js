@@ -86,7 +86,7 @@ function keyUpSet(key) {
 }
 app.get("/xy", async (req, res) => {
   const { x, y, px, side } = req.query;
-
+  console.log(x, y);
   if (!execing) {
     console.log("동작그만");
     stopExec();

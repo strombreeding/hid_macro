@@ -8,7 +8,7 @@ from detection_utils_v2 import TobiState, find_tobi_ultra_fast, race_find_tobi
 
 
 job = "wizard"
-monster = "skeleton"
+monster = "mix"
 
 
 try:
@@ -83,17 +83,17 @@ def draw_link_with_distance(bgr_img, p1, p2, out_path="tobi_vs_monster.png", mod
 
 
 # ===== 템플릿 로더 =====
-def load_tobi_templates():
-    tpls = []
-    for i in range(1, 9):  # 필요 개수 맞게 조절
-        path = f"wizard{i}.png"
-        try:
-            for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
-                print(f"[wizard] {path} scale={scale} size={size}")
-                tpls.append((path, scale, tmpl, size))  # 4튜플
-        except FileNotFoundError as e:
-            status_line(e)
-    return tpls
+# def load_tobi_templates():
+#     tpls = []
+#     for i in range(1, 9):  # 필요 개수 맞게 조절
+#         path = f"wizard{i}.png"
+#         try:
+#             for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
+#                 print(f"[wizard] {path} scale={scale} size={size}")
+#                 tpls.append((path, scale, tmpl, size))  # 4튜플
+#         except FileNotFoundError as e:
+#             status_line(e)
+#     return tpls
 
 # 레이스용
 def load_tobi_back(job):
@@ -101,11 +101,13 @@ def load_tobi_back(job):
     return _load_templates_from_list(files)
 
 def load_tobi_left(job):
-    files = [f"images/{job}/left{i}.png" for i in range(6, 7)]
+    # files = [f"images/{job}/left{i}.png" for i in range(6, 7)]
+    files = [f"images/{job}/left{i}.png" for i in range(1, 9)] # 골숲
     return _load_templates_from_list(files)
 
 def load_tobi_right(job):
-    files = [f"images/{job}/right{i}.png" for i in range(6, 7)]
+    # files = [f"images/{job}/right{i}.png" for i in range(6, 7)]
+    files = [f"images/{job}/right{i}.png" for i in range(1, 10)] # 골숲
     return _load_templates_from_list(files)
 
 def _load_templates_from_list(files):
@@ -134,7 +136,7 @@ def load_monster_templates():
 
 def main():
     # 전역 한 번만 로드 (스코프/순서 문제 방지)
-    tobi_templates = load_tobi_templates()
+    # tobi_templates = load_tobi_templates()
 
     # @ state별로 따로 로드
     back_templates  = load_tobi_back(job)
@@ -226,12 +228,7 @@ def main():
                     # status_line(f"[distance] tobi↔monster = {dist:.2f}px")
 
                     # 상태 메시지(가깝다/중간/멀다)
-                    if dist <= NEAR_PX:
-                        status_line("[range] NEAR")
-                    elif dist >= FAR_PX:
-                        status_line("[range] FAR")
-                    else:
-                        status_line("[range] MID")
+          
 
                     # --- LEFT / RIGHT 판별 추가 -------------------------
                     # center가 (x, y) 튜플일 때:
@@ -261,6 +258,7 @@ def main():
                     #     print(f"[distance-x] Δx = {dist:.1f}px")
                     #     last_mark_time = time.monotonic()
                     requests.get(f"http://localhost:8083/action?side={side}&px={dist}")
+                    print(dist)
                 else:
                     # status_line("[monster] 후보 없음")
                     pass
