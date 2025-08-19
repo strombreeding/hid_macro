@@ -8,7 +8,7 @@ from detection_utils_v2 import TobiState, find_tobi_ultra_fast, race_find_tobi
 
 
 job = "wizard"
-monster = "mix"
+monster = "skeleton"
 
 
 try:
@@ -101,13 +101,13 @@ def load_tobi_back(job):
     return _load_templates_from_list(files)
 
 def load_tobi_left(job):
-    # files = [f"images/{job}/left{i}.png" for i in range(6, 7)]
-    files = [f"images/{job}/left{i}.png" for i in range(1, 9)] # 골숲
+    files = [f"images/{job}/left{i}.png" for i in range(6, 7)]
+    # files = [f"images/{job}/left{i}.png" for i in range(1, 9)] # 골숲
     return _load_templates_from_list(files)
 
 def load_tobi_right(job):
-    # files = [f"images/{job}/right{i}.png" for i in range(6, 7)]
-    files = [f"images/{job}/right{i}.png" for i in range(1, 10)] # 골숲
+    files = [f"images/{job}/right{i}.png" for i in range(6, 7)]
+    # files = [f"images/{job}/right{i}.png" for i in range(1, 10)] # 골숲
     return _load_templates_from_list(files)
 
 def _load_templates_from_list(files):
@@ -124,7 +124,7 @@ def _load_templates_from_list(files):
 
 def load_monster_templates():
     tpls = []
-    for i in range(1, 5):  # monster7~10
+    for i in range(1, 3):  # monster7~10
         path = f"images/{job}/{monster}/{monster}{i}.png"
         try:
             for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
@@ -179,30 +179,19 @@ def main():
             roi_margin=140,
             coarse_ratio=0.5,
             early_win=0.83,
-            max_workers=4,
+            max_workers=2,
             full_search_every=6,
             frame_index=frame_idx,
             find_fn=find_tobi_ultra_fast  # 네가 제공한 함수 그대로 사용
         )
 
-        # - 나중에 살려
-        # best_tobi = find_tobi_ultra_fast(
-        #         gray, tobi_templates, tobi_state,
-        #         threshold=THRESHOLD,
-        #         roi_margin=140,          # 더 줄이면 더 빠름(120~160 사이 튜닝)
-        #         coarse_ratio=0.5,        # 0.4까지 내려도 됨(정확도 소폭↓)
-        #         early_win=0.8,
-        #         max_workers=4,
-        #         full_search_every=6,     # 6프레임마다(≈1.8s@300ms) 전체 탐색
-        #         frame_index=frame_idx
-        #     )
 
         if best_tobi and best_tobi["max_val"] >= THRESHOLD:
             x, y = best_tobi["top_left"]; w, h = best_tobi["size"]
             tobi_center = (x + w // 2, y + h // 2)
-            requests.get(f"http://localhost:8083/xy?x={x}&y={y}")
+            requests.get(f"http://localhost:8083/xy?x={x}&y={y}&side={winner_dir}")
             # print(f"find_tobi_ultra_fast Execution Time: {time.time() - start_time:.2f}s")
-            status_line(f"{x},{y} {time.time() - start_time:.2f}s {best_tobi['name']}")
+            status_line(f"{x},{y} {winner_dir}")
 
             # 토비 마킹 이미지: 1초에 1번만
             # if time.monotonic() - last_mark_time > LAST_MARK_INTERVAL_S:
@@ -222,44 +211,48 @@ def main():
                     nearest = min(mons, key=lambda m: euclidean(tobi_center, m["center"]))
                     # status_line(f"[nearest-monster] {nearest['name']} "
                     #       f"score={nearest['score']:.3f} center={nearest['center']}")
-                    draw_point(bgr, nearest["center"], out_path="tobi_monster_nearest.png", text="M*")
+                    # draw_point(bgr, nearest["center"], out_path="tobi_monster_nearest.png", text="M*")
                     # 거리 계산
                     dist = euclidean(tobi_center, nearest["center"])
-                    # status_line(f"[distance] tobi↔monster = {dist:.2f}px")
-
                     # 상태 메시지(가깝다/중간/멀다)
-          
+                    
 
-                    # --- LEFT / RIGHT 판별 추가 -------------------------
-                    # center가 (x, y) 튜플일 때:
-                    dx = float(nearest["center"][0] - tobi_center[0])  # +면 오른쪽, -면 왼쪽
-                    side_tol = 3.0  # 거의 같은 x일 때 'CENTER'로 처리할 허용 오차(px)
-
-                    if dx > side_tol:
-                        side = "RIGHT"
-                    elif dx < -side_tol:
-                        side = "LEFT"
+                    # 
+                    if y - nearest["center"][1] > 50 or nearest["center"][1] - y > 50:
+                        requests.get(f"http://localhost:8083/action?side={"LEFT"}&px={1000}")
+                        pass
                     else:
-                        side = "CENTER"
-                    # print(f"[side] {side} (dx={dx:+.1f}px)")
+                        # --- LEFT / RIGHT 판별 추가 -------------------------
+                        # center가 (x, y) 튜플일 때:
+                        dx = float(nearest["center"][0] - tobi_center[0])  # +면 오른쪽, -면 왼쪽
+                        side_tol = 3.0  # 거의 같은 x일 때 'CENTER'로 처리할 허용 오차(px)
 
-                    # 1초에 1번만 시각화 저장 (과도한 IO 방지)
-                    # if time.monotonic() - last_mark_time > DIST_MARK_INTERVAL_S:
-                    # if True:
-                    #     status_line("아예 프린트를 안타는데 ?")
-                    #     dist = draw_link_with_distance(
-                    #         bgr,
-                    #         tobi_center,
-                    #         nearest["center"],
-                    #         out_path="tobi_vs_monster.png",
-                    #         mode="horizontal"  # 가로 거리만 계산/표시
-                    #     )
-                    #     status_line(f"[distance-x] Δx = {dist:.1f}px")
-                    #     print(f"[distance-x] Δx = {dist:.1f}px")
-                    #     last_mark_time = time.monotonic()
-                    requests.get(f"http://localhost:8083/action?side={side}&px={dist}")
-                    print(dist)
+                        if dx > side_tol:
+                            side = "RIGHT"
+                        elif dx < -side_tol:
+                            side = "LEFT"
+                        else:
+                            side = "CENTER"
+                        # print(f"[side] {side} (dx={dx:+.1f}px)")
+
+                        # 1초에 1번만 시각화 저장 (과도한 IO 방지)
+                        # if time.monotonic() - last_mark_time > DIST_MARK_INTERVAL_S:
+                        # if True:
+                        #     status_line("아예 프린트를 안타는데 ?")
+                        #     dist = draw_link_with_distance(
+                        #         bgr,
+                        #         tobi_center,
+                        #         nearest["center"],
+                        #         out_path="tobi_vs_monster.png",
+                        #         mode="horizontal"  # 가로 거리만 계산/표시
+                        #     )
+                        #     status_line(f"[distance-x] Δx = {dist:.1f}px")
+                        #     print(f"[distance-x] Δx = {dist:.1f}px")
+                        #     last_mark_time = time.monotonic()
+                        requests.get(f"http://localhost:8083/action?side={side}&px={dist}")
+                        # print(dist)
                 else:
+                    requests.get(f"http://localhost:8083/action?side={"LEFT"}&px={1000}")
                     # status_line("[monster] 후보 없음")
                     pass
                     

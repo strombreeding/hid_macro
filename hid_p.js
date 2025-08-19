@@ -35,8 +35,7 @@ const emitHeal = async () => {
   if (isMonsterExist) {
     if (!rayUsed) {
       rayUsed = true;
-      port.write("keyDown end\n");
-      port.write("keyUp end\n");
+
       setTimeout(async () => {
         port.write("keyDown leftctrl\n");
         await sleep(50);

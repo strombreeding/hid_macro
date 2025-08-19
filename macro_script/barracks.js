@@ -53,23 +53,29 @@ let safeMoving = false;
 let firstStepDone = false;
 let secondStepDone = false;
 let thirdStepDone = false;
+let fourStepDone = false;
 let lastStepDone = false;
 let startTime = 0;
 let dangerMonster = false;
 let isSafeArea = false;
+let execlay = false;
+let actioning = false;
+
+const direct = {
+  x: 0,
+  y: 0,
+  side: "right",
+};
 
 function stopExec() {
-  port.write("keyUp leftarrow\n");
-  port.write("keyUp uparrow\n");
-  port.write("keyUp downarrow\n");
-  port.write("keyUp rightarrow\n");
-  port.write("keyUp leftshift\n");
-  port.write("keyUp z\n");
-  port.write("keyUp leftctrl\n");
   firstStepDone = false;
   secondStepDone = false;
   thirdStepDone = false;
+  fiveStepDone = false;
   lastStepDone = false;
+  execKeys.forEach((key) => {
+    keyUpSet(key);
+  });
   execKeys.clear();
 }
 
@@ -77,8 +83,6 @@ function keyDownSet(key) {
   if (!execKeys.has(key)) {
     port.write(`keyDown ${key}\n`);
     execKeys.add(key);
-    // console.log("keyDown", key);
-    console.log(execKeys.entries());
   }
 }
 
@@ -86,133 +90,278 @@ function keyUpSet(key) {
   if (execKeys.has(key)) {
     port.write(`keyUp ${key}\n`);
     execKeys.delete(key);
-    // console.log("keyUp", key);
-    console.log(execKeys.entries());
   }
 }
+
+async function moveToUpperStep() {
+  if (execlay) {
+    await sleep(500);
+    console.log("레이끝난 후 이동");
+    return await moveToUpperStep();
+  }
+  actioning = true;
+  await sleep(300);
+  console.log("위로가기");
+  keyDownSet("leftshift");
+  keyDownSet("uparrow");
+  keyUpSet("uparrow");
+  keyUpSet("leftshift");
+  actioning = false;
+  await sleep(500);
+  return true;
+}
+
+async function nearMonsterAndLay() {
+  if (dangerMonster && !execlay && !actioning) {
+    execlay = true;
+    keyDownSet("x");
+    await sleep(100);
+    keyUpSet("x");
+    setTimeout(() => {
+      execlay = false;
+    }, 1200);
+    return;
+  }
+}
+
+// 사다리 타는 함수 실행. 근데 함수 안에서는 execlay가 true면 300ms이후 다시 함수를 재싫애함
+async function upperLoader() {
+  console.log("upperLoader 실행요청 레이사용여부 =", execlay);
+  if (execlay) {
+    await sleep(500);
+    console.log("레이끝난 후 이동");
+    return await upperLoader();
+  }
+  actioning = true;
+
+  keyDownSet("rightarrow");
+  keyDownSet("uparrow");
+
+  await sleep(500);
+
+  keyDownSet("leftalt");
+  keyUpSet("leftalt");
+  keyUpSet("rightarrow");
+  actioning = false;
+  return;
+}
+
+// 사다리 한번 떨구고 좌측 이동
+async function lowerLoader() {
+  if (execlay) {
+    await sleep(500);
+    console.log("레이끝난 후 이동");
+    return await lowerLoader();
+  }
+  actioning = true;
+  keyUpSet("uparrow");
+  keyDownSet("leftarrow");
+  keyDownSet("leftalt");
+  keyUpSet("leftalt");
+  actioning = false;
+  return;
+}
+
+let isLoadderOn = false;
+let secondStep = false;
+let timeoutLoop = null;
+let stepEcec = false;
+const execAction = async () => {
+  if (!execing) {
+    return (actioning = false);
+  }
+  clearTimeout(timeoutLoop);
+  actioning = true;
+  console.log(direct.x, direct.side, dangerMonster);
+
+  // - 왼쪽으로 이동
+  if (direct.x > 450 && !firstStepDone) {
+    firstStepDone = true;
+    console.log("왼쪽으로 이동하자");
+    keyDownSet("leftshift");
+    await sleep(50);
+    keyDownSet("leftarrow");
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  // - 위로 이동
+  if (direct.x < 450 && !secondStepDone) {
+    secondStepDone = true;
+    keyUpSet("leftarrow");
+    keyUpSet("leftshift");
+    await moveToUpperStep();
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  // - back이 보일때까지 정해진좌표로 이동 및 공격, 및 점프
+  if (!thirdStepDone && direct.side === "back") {
+    console.log("사다리 메달리기 성공");
+    thirdStepDone = true;
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  } else if (
+    secondStepDone &&
+    direct.side !== "back" &&
+    !thirdStepDone &&
+    !stepEcec
+  ) {
+    stepEcec = true;
+    if (direct.x < 790) {
+      if (dangerMonster) {
+        keyDownSet("x");
+        keyUpSet("x");
+        await sleep(1200);
+        stepEcec = false;
+        timeoutLoop = setTimeout(async () => await execAction(), 500);
+        return;
+      }
+      keyUpSet("leftarrow");
+      keyDownSet("rightarrow");
+      await sleep(650 - direct.x + 30);
+      console.log("왼", 650 - direct.x);
+      keyDownSet("leftalt");
+      await sleep(10);
+      keyUpSet("leftalt");
+      keyUpSet("rightarrow");
+      keyDownSet("uparrow");
+      setTimeout(() => {
+        keyUpSet("uparrow");
+      }, 600);
+    } else if (direct.x > 790) {
+      if (dangerMonster) {
+        keyDownSet("x");
+        keyUpSet("x");
+        await sleep(1200);
+        stepEcec = false;
+        timeoutLoop = setTimeout(async () => await execAction(), 500);
+        return;
+      }
+      keyUpSet("rightarrow");
+      keyDownSet("leftarrow");
+      await sleep(direct.x - 880);
+      console.log("오", direct.x - 880);
+      keyDownSet("leftalt");
+      await sleep(10);
+      keyUpSet("leftalt");
+      keyUpSet("leftarrow");
+      keyDownSet("uparrow");
+      setTimeout(() => {
+        keyUpSet("uparrow");
+      }, 850);
+    }
+    stepEcec = false;
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  // - 왼쪽으로 한번 떨어지기
+  if (thirdStepDone && !fourStepDone) {
+    console.log("왼쪽 한번 떨어지기");
+    keyDownSet("leftarrow");
+    keyDownSet("leftalt");
+    keyUpSet("leftalt");
+    await sleep(1000);
+    keyUpSet("leftarrow");
+    fourStepDone = true;
+    thirdStepDone = false;
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  // - x가 오른쪽끝까지 닿을때까지 우측+위측+z키 누르기, 몬스터 발견시 x키 누르기
+  if (
+    firstStepDone &&
+    secondStepDone &&
+    thirdStepDone &&
+    fourStepDone &&
+    !fiveStepDone
+  ) {
+    console.log("오른쪽 이동");
+    keyDownSet("uparrow");
+    keyDownSet("rightarrow");
+    // keyUpSet("uparrow");
+    fiveStepDone = true;
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  if (dangerMonster) {
+    console.log("몹발견, 공격시도");
+    await sleep(50);
+    keyDownSet("x");
+    keyUpSet("x");
+    timeoutLoop = setTimeout(async () => await execAction(), 1000);
+    return;
+  }
+
+  // - 밑점하기
+  if (fiveStepDone && !lastStepDone && direct.x > 2150) {
+    console.log("밑점하기");
+    keyUpSet("uparrow");
+    keyUpSet("z");
+    keyUpSet("rightarrow");
+    await sleep(1000);
+    keyDownSet("downarrow");
+    await sleep(500);
+    keyDownSet("leftalt");
+    keyUpSet("leftalt");
+    await sleep(300);
+    keyUpSet("downarrow");
+    await sleep(100);
+    lastStepDone = true;
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+
+  if (
+    firstStepDone &&
+    secondStepDone &&
+    thirdStepDone &&
+    fourStepDone &&
+    fiveStepDone &&
+    lastStepDone
+  ) {
+    firstStepDone = false;
+    secondStepDone = false;
+    thirdStepDone = false;
+    fourStepDone = false;
+    fiveStepDone = false;
+    lastStepDone = false;
+    buffExecing = false;
+    actioning = false;
+    execKeys.forEach((key) => port.write(`keyUp ${key}`));
+    execKeys.clear();
+    return;
+  } else {
+    timeoutLoop = setTimeout(async () => await execAction(), 500);
+    return;
+  }
+};
+
 app.get("/xy", async (req, res) => {
   const { x, y, px, side } = req.query;
+  direct.x = x;
+  direct.y = y;
+  direct.side = side;
 
   if (!execing) {
-    console.log("동작그만");
     stopExec();
     return res.send("ok");
   }
 
+  if (execlay || actioning) {
+    return res.send("ok");
+  }
+
+  // if (dangerMonster) {
+  //   await nearMonsterAndLay();
+  //   return res.send("ok");
+  // }
   if (buffExecing) {
     // getMove = true;
-
-    // console.log(x, y);
-    if (x > 390 && y > 1000 && !firstStepDone) {
-      console.log("왼쪽으로 이동하자");
-      if (startTime === 0) {
-        startTime = Date.now();
-      }
-      keyDownSet("leftshift");
-      await sleep(50);
-      keyDownSet("leftarrow");
-      firstStepDone = true;
-    } else if (x < 390) {
-      if (!secondStepDone) {
-        await sleep(300);
-        console.log("위로가기");
-
-        keyUpSet("leftarrow");
-        await sleep(100);
-        keyDownSet("uparrow");
-        await sleep(50);
-        keyUpSet("uparrow");
-        await sleep(50);
-
-        secondStepDone = true;
-      } else if (!thirdStepDone) {
-        thirdStepDone = true;
-        console.log("오른쪽으로 이동하자");
-        keyUpSet("leftshift");
-        await sleep(350);
-        keyDownSet("x");
-        await sleep(600);
-        keyUpSet("x");
-        await sleep(2200); // 확실하게 기다려보기
-        keyDownSet("leftshift");
-        await sleep(300);
-        keyDownSet("rightarrow");
-        await sleep(50);
-        keyUpSet("rightarrow");
-        await sleep(50);
-        keyUpSet("leftshift");
-        await sleep(300);
-        keyDownSet("leftarrow");
-        await sleep(120);
-        keyDownSet("leftalt");
-        keyUpSet("leftalt");
-        keyUpSet("leftarrow");
-        keyDownSet("uparrow");
-        //@ 고의적으로 한번 떨어트려
-        await sleep(600);
-        keyUpSet("uparrow");
-        keyDownSet("leftarrow");
-        keyDownSet("leftalt");
-        keyUpSet("leftalt");
-        //@ 1초후 다시 반복
-        await sleep(350);
-        keyDownSet("x");
-        await sleep(600);
-        keyUpSet("x");
-        await sleep(2200);
-        keyUpSet("leftarrow");
-        await sleep(50);
-        keyDownSet("leftshift");
-        //@ 오른쪽으로 다시 텔포1, 사다리타기 이후 끝
-        await sleep(300);
-        console.log("오른쪽으로 이동하자222", execKeys.entries());
-        keyDownSet("rightarrow");
-        await sleep(50);
-        keyUpSet("rightarrow");
-        keyUpSet("leftshift");
-        await sleep(200);
-        keyDownSet("leftarrow");
-        await sleep(100);
-        keyUpSet("leftarrow");
-        await sleep(50);
-        keyDownSet("leftalt");
-        keyUpSet("leftalt");
-        await sleep(50);
-        keyDownSet("uparrow");
-        await sleep(50);
-        // keyDownSet("z");
-        // //@
-        await sleep(50);
-        keyDownSet("rightarrow");
-        await sleep(50);
-        keyDownSet("z");
-        await sleep(1600);
-        keyUpSet("uparrow");
-        console.log(execKeys.has("uparrow"));
-      }
-    } else if (x > 2100 && y > 970 && y < 1030 && !lastStepDone) {
-      lastStepDone = true;
-      console.log("마지막 단계");
-      keyUpSet("rightarrow");
-      keyUpSet("z");
-      await sleep(50);
-      keyDownSet("downarrow");
-      await sleep(1000);
-      keyDownSet("leftalt");
-      keyUpSet("leftalt");
-      await sleep(50);
-      keyUpSet("downarrow");
-      await sleep(100);
-      buffExecing = false;
-      firstStepDone = false;
-      secondStepDone = false;
-      thirdStepDone = false;
-      lastStepDone = false;
-      console.log("다 먹었다!!");
-      console.log("소요시간", Math.floor((Date.now() - startTime) / 1000), "s");
-      startTime = 0;
-    }
-    // 1100 정도에 힐이 닿는다
+    await execAction();
 
     return res.send("ok");
   }
@@ -228,23 +377,11 @@ app.get("/action", async (req, res) => {
   if (px && px < 330) {
     console.log(px, "몹");
     dangerMonster = true;
-  }
-  if (!execing || buffExecing || !isSafeArea) {
-    return res.send("ok");
+  } else {
+    console.log(px, "몹없음");
+    dangerMonster = false;
   }
 
-  if (px && px < 350 && !execKeys.has("x")) {
-    await sleep(300);
-    keyDownSet("x");
-    await sleep(2000);
-    keyUpSet("x");
-  } else if (px && !execKeys.has("leftctrl")) {
-    keyDownSet("leftctrl");
-    await sleep(500);
-    port.write("keyUp leftctrl\n");
-    await sleep(3000);
-    keyUpSet("leftctrl");
-  }
   return res.send("ok");
 });
 
@@ -256,7 +393,6 @@ app.get("/notfound", (req, res) => {
   res.send("ok");
 });
 app.get("/detect", (req, res) => {
-  console.log("detect.");
   // setTimeout(() => {
   //   plaing = false;
   // }, 22000);
@@ -304,26 +440,22 @@ async function main() {
         keyUpSet("d");
         buffCnt = 0;
       }
-      port.write("keyDown leftctrl\n");
-      port.write("keyUp leftctrl\n");
-      setTimeout(() => {
-        // - 심
-        port.write("keyDown pagedown\n");
-        port.write("keyUp pagedown\n");
-        setTimeout(() => {
-          // - 블
-          port.write("keyDown pageup\n");
-          port.write("keyUp pageup\n");
-          setTimeout(() => {
-            port.write("keyDown leftctrl\n");
-            port.write("keyUp leftctrl\n");
-            setTimeout(() => {
-              execing = true;
-              console.log("버프 끝");
-            }, 500);
-          }, 3000);
-        }, 2000);
-      }, 1000);
+      await sleep(500);
+      keyDownSet("leftctrl");
+      keyUpSet("leftctrl");
+      await sleep(800);
+      // - 심
+      keyDownSet("pagedown");
+      keyUpSet("pagedown");
+      await sleep(2000);
+      // - 블
+      keyDownSet("pageup");
+      keyUpSet("pageup");
+      await sleep(2200);
+      keyDownSet("leftctrl");
+      keyUpSet("leftctrl");
+      await sleep(500);
+      execing = true;
     });
 
     socket.on("exit", () => {
@@ -365,15 +497,14 @@ if (!buffExecing) {
   }
 */
 
-function moveToSafeArea(x) {
+let lastExecHeal = Date.now();
+async function moveToSafeArea(x) {
   // - 1540 보다 작으면 오른쪽으로 좀 와야함
   /* 
-  - 우측발판 좌 : 최대 1540px
-  - 우측발판 우 : 최대 1550px
-  - 우측발판 최대 : 1470px
-  - 좌측발판 좌 : 최소 1280px
-  - 좌측발판 우 : 최소 1300px
-  - 좌측발판 최대 : 1370px
+  - 우측발판 좌 : 최대 1560
+  - 우측발판 우 : 최대 1530px
+  - 좌측발판 좌 : 최소 1344
+  - 좌측발판 우 : 최소 1374px
   
   - 서 있는곳 판단
   - 우측발판일 경우 x좌표가 1450보다 크면 우측발판임
@@ -389,10 +520,26 @@ function moveToSafeArea(x) {
   - if (x < 1500 ){ 오른쪽으로 이동함}
   */
   // 현재 어디 발판쪽에 있는지
-  if (x > 1450) {
+
+  if (x > 1560 || 1344 > x) {
+    isSafeArea = false;
+  }
+  if (x > 1500) {
     stayOn = "right";
-  } else if (x < 1370) {
+  } else {
     stayOn = "left";
+  }
+
+  if (dangerMonster && !execlay) {
+    await nearMonsterAndLay();
+    return;
+  }
+
+  if (isSafeArea && lastExecHeal + Math.random() * 1000 + 2000 < Date.now()) {
+    keyDownSet("leftctrl");
+    await sleep(200);
+    keyUpSet("leftctrl");
+    lastExecHeal = Date.now();
   }
 
   if (buffExecing) {
@@ -405,43 +552,42 @@ function moveToSafeArea(x) {
   console.log(stayOn);
   // 안전지대 판단
   if (stayOn === "right" && !safeMoving) {
-    if (x > 1540) {
-      const range = x - 1540 < 150 ? 75 : 450;
+    if (x > 1560) {
+      const range = x < 1800 ? 75 : 600;
+      // const range = x - 1560 < 50 ? 75 : 150;
       safeMoving = true;
-      if (x > 1999) {
-        port.write("keyDown leftshift\n");
-      }
-      port.write("keyDown leftarrow\n");
-      port.write("keyUp leftshift\n");
-      setTimeout(() => {
-        port.write("keyUp leftarrow\n");
-        console.log("무빙 끝");
-        safeMoving = false;
-        isSafeArea = false;
-      }, range); // 100
+      // if (x > 1999) {
+      //   keyDownSet("leftshift");
+      // }
+      keyDownSet("leftarrow");
+      keyUpSet("leftshift");
+      await sleep(range);
+      keyUpSet("leftarrow");
+      console.log("무빙 끝");
+      safeMoving = false;
+      isSafeArea = false;
       console.log("빨리 안전지대로 이동하세요, 몬스터가 없을때 이동하세요");
     } else {
       safeMoving = false;
       isSafeArea = true;
-      port.write("keyUp leftarrow\n");
+      keyUpSet("leftarrow");
 
       console.log("현재 안전지대 입니다.");
     }
   } else if (stayOn === "left") {
-    if (x < 1300) {
-      const range = 1300 - x < 200 ? 50 : 200;
+    if (x < 1344) {
+      const range = 1344 - x < 50 ? 75 : 600;
       safeMoving = true;
-      if (x < 800) {
-        port.write("keyDown leftshift\n");
-      }
-      port.write("keyDown rightarrow\n");
-      port.write("keyUp leftshift\n");
-      setTimeout(() => {
-        port.write("keyUp rightarrow\n");
-        console.log("무빙 끝");
-        safeMoving = false;
-        isSafeArea = false;
-      }, range);
+      // if (x < 800) {
+      //   keyDownSet("leftshift");
+      // }
+      keyDownSet("rightarrow");
+      keyUpSet("leftshift");
+      await sleep(range);
+      keyUpSet("rightarrow");
+      console.log("무빙 끝");
+      safeMoving = false;
+      isSafeArea = false;
       console.log("빨리 안전지대로 이동하세요, 몬스터가 없을때 이동하세요");
     } else {
       safeMoving = false;
