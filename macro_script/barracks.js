@@ -220,10 +220,11 @@ const execAction = async () => {
       keyUpSet("leftarrow");
       keyDownSet("rightarrow");
       await sleep(650 - direct.x + 30);
-      console.log("왼", 650 - direct.x);
+      console.log("왼", 650 - direct.x, stepEcec);
       keyDownSet("leftalt");
-      await sleep(10);
-      keyUpSet("leftalt");
+      setTimeout(() => {
+        keyUpSet("leftalt");
+      }, 10);
       keyUpSet("rightarrow");
       keyDownSet("uparrow");
       setTimeout(() => {
@@ -243,7 +244,9 @@ const execAction = async () => {
       await sleep(direct.x - 880);
       console.log("오", direct.x - 880);
       keyDownSet("leftalt");
-      await sleep(10);
+      setTimeout(() => {
+        keyUpSet("leftalt");
+      }, 10);
       keyUpSet("leftalt");
       keyUpSet("leftarrow");
       keyDownSet("uparrow");
@@ -432,29 +435,29 @@ async function main() {
       ++buffCnt;
       buffExecing = true;
       execing = false;
-      // - 펫먹이
-      if (buffCnt > 3) {
-        await sleep(300);
-        keyDownSet("d");
-        await sleep(50);
-        keyUpSet("d");
-        buffCnt = 0;
-      }
-      await sleep(500);
-      keyDownSet("leftctrl");
-      keyUpSet("leftctrl");
-      await sleep(800);
-      // - 심
-      keyDownSet("pagedown");
-      keyUpSet("pagedown");
-      await sleep(2000);
-      // - 블
-      keyDownSet("pageup");
-      keyUpSet("pageup");
-      await sleep(2200);
-      keyDownSet("leftctrl");
-      keyUpSet("leftctrl");
-      await sleep(500);
+      // // - 펫먹이
+      // if (buffCnt > 3) {
+      //   await sleep(300);
+      //   keyDownSet("d");
+      //   await sleep(50);
+      //   keyUpSet("d");
+      //   buffCnt = 0;
+      // }
+      // await sleep(500);
+      // keyDownSet("leftctrl");
+      // keyUpSet("leftctrl");
+      // await sleep(800);
+      // // - 심
+      // keyDownSet("pagedown");
+      // keyUpSet("pagedown");
+      // await sleep(2000);
+      // // - 블
+      // keyDownSet("pageup");
+      // keyUpSet("pageup");
+      // await sleep(2200);
+      // keyDownSet("leftctrl");
+      // keyUpSet("leftctrl");
+      // await sleep(500);
       execing = true;
     });
 
