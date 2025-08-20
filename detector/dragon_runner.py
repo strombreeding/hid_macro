@@ -83,29 +83,29 @@ def draw_link_with_distance(bgr_img, p1, p2, out_path="tobi_vs_monster.png", mod
 
 
 # ===== 템플릿 로더 =====
-def load_tobi_templates():
-    tpls = []
-    for i in range(1, 9):  # 필요 개수 맞게 조절
-        path = f"wizard{i}.png"
-        try:
-            for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
-                print(f"[wizard] {path} scale={scale} size={size}")
-                tpls.append((path, scale, tmpl, size))  # 4튜플
-        except FileNotFoundError as e:
-            status_line(e)
-    return tpls
+# def load_tobi_templates():
+#     tpls = []
+#     for i in range(1, 9):  # 필요 개수 맞게 조절
+#         path = f"dragon{i}.png"
+#         try:
+#             for scale, tmpl, size in load_scaled_templates(path, SCALE_FACTORS):
+#                 print(f"[dragon] {path} scale={scale} size={size}")
+#                 tpls.append((path, scale, tmpl, size))  # 4튜플
+#         except FileNotFoundError as e:
+#             status_line(e)
+#     return tpls
 
 # 레이스용
 def load_tobi_back(job):
-    files = [f"images/{job}/back{i}.png" for i in range(1, 3)]
+    files = [f"images/{job}/back{i}.png" for i in range(1, 2)]
     return _load_templates_from_list(files)
 
 def load_tobi_left(job):
-    files = [f"images/{job}/left{i}.png" for i in range(6, 7)]
+    files = [f"images/{job}/left{i}.png" for i in range(1, 2)]
     return _load_templates_from_list(files)
 
 def load_tobi_right(job):
-    files = [f"images/{job}/right{i}.png" for i in range(6, 7)]
+    files = [f"images/{job}/right{i}.png" for i in range(1, 2)]
     return _load_templates_from_list(files)
 
 def _load_templates_from_list(files):
@@ -134,7 +134,7 @@ def load_monster_templates():
 
 def main():
     # 전역 한 번만 로드 (스코프/순서 문제 방지)
-    tobi_templates = load_tobi_templates()
+    # tobi_templates = load_tobi_templates()
 
     # @ state별로 따로 로드
     back_templates  = load_tobi_back(job)

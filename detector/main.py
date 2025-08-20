@@ -8,11 +8,11 @@ scale_factors = [1.0, 2.0]  # 윈도우 / 맥 대응
 templates = []
 
 # 템플릿 로드
-for i in range(7, 13):
+for i in range(1, 5):
     try:
-        scaled_versions = load_scaled_templates(f"monster{i}.png", scale_factors)
+        scaled_versions = load_scaled_templates(f"images/dragon/skeleton/skeleton{i}.png", scale_factors)
         for scale, tmpl, size in scaled_versions:
-            templates.append((f"monster{i}.png", scale, tmpl, size))
+            templates.append((f"images/dragon/skeleton/skeleton{i}.png", scale, tmpl, size))
     except FileNotFoundError as e:
         print(e)
 

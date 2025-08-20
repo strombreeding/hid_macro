@@ -53,7 +53,10 @@ let safeMoving = false;
 let firstStepDone = false;
 let secondStepDone = false;
 let thirdStepDone = false;
+let isSafeArea = false;
 let lastStepDone = false;
+let canEatDrink = false;
+let timer = null;
 
 function stopExec() {
   port.write("keyUp leftarrow\n");
@@ -108,14 +111,20 @@ app.get("/xy", async (req, res) => {
 app.get("/action", async (req, res) => {
   const { px, side } = req.query;
 
-  if (!execing || buffExecing) {
+  if (!execing || buffExecing || !isSafeArea) {
     return res.send("ok");
   }
 
   if (px && !execKeys.has("leftshift")) {
-    await sleep(250);
+    await sleep(350);
+    if (canEatDrink) {
+      keyDownSet("t");
+      keyUpSet("t");
+      await sleep(50);
+      keyDownSet("t");
+      keyUpSet("t");
+    }
     keyDownSet("leftshift");
-    await sleep(1000);
     keyUpSet("leftshift");
   }
   return res.send("ok");
@@ -166,6 +175,7 @@ async function main() {
     });
 
     socket.on("buff", async () => {
+      canEatDrink = true;
       ++buffCnt;
       buffExecing = true;
       execing = false;
@@ -177,10 +187,16 @@ async function main() {
         keyUpSet("d");
         buffCnt = 0;
       }
-      await sleep(2000);
+      port.write("keyDown space\n");
+      await sleep(1000);
+      port.write("keyUp space\n");
+      await sleep(1000);
       execing = true;
       buffExecing = false;
-      await sleep(1000);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        canEatDrink = false;
+      }, 20000);
     });
 
     socket.on("exit", () => {
@@ -246,35 +262,27 @@ function moveToSafeArea(x) {
   - if (x < 1500 ){ 오른쪽으로 이동함}
   */
   // 현재 어디 발판쪽에 있는지
-  if (x > 1450) {
+  if (x > 1600) {
     stayOn = "right";
-  } else if (x < 1370) {
+  } else if (x < 1510) {
     stayOn = "left";
+  } else {
+    //! 비상 케이스
+    stayOn = "center";
   }
 
-  if (buffExecing) {
-    console.log("버프 실행중입니다.");
-    setTimeout(() => {
-      buffExecing = false;
-    }, 1000);
-    return res.send("ok");
-  }
-  console.log(stayOn);
   // 안전지대 판단
   if (stayOn === "right" && !safeMoving) {
-    if (x > 1540) {
-      const range = x - 1540 < 150 ? 100 : 200;
+    if (x > 1660) {
+      const range = x - 1660 < 75 ? 50 : 50;
       safeMoving = true;
-      if (x > 1999) {
-        port.write("keyDown leftshift\n");
-      }
       port.write("keyDown leftarrow\n");
-      port.write("keyUp leftshift\n");
       setTimeout(() => {
         port.write("keyUp leftarrow\n");
         console.log("무빙 끝");
         safeMoving = false;
       }, range); // 100
+      isSafeArea = false;
       console.log("빨리 안전지대로 이동하세요, 몬스터가 없을때 이동하세요");
     } else {
       safeMoving = false;
@@ -284,19 +292,16 @@ function moveToSafeArea(x) {
       console.log("현재 안전지대 입니다.");
     }
   } else if (stayOn === "left") {
-    if (x < 1300) {
-      const range = 1300 - x < 200 ? 50 : 200;
+    if (x < 1429) {
+      const range = 1429 - x < 75 ? 50 : 50;
       safeMoving = true;
-      if (x < 800) {
-        port.write("keyDown leftshift\n");
-      }
       port.write("keyDown rightarrow\n");
-      port.write("keyUp leftshift\n");
       setTimeout(() => {
         port.write("keyUp rightarrow\n");
         console.log("무빙 끝");
         safeMoving = false;
       }, range);
+      isSafeArea = false;
       console.log("빨리 안전지대로 이동하세요, 몬스터가 없을때 이동하세요");
     } else {
       safeMoving = false;
